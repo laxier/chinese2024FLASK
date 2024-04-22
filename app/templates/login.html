@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="display: flex; flex-direction: column; max-width: 330px; padding: 1rem; margin: auto !important;"
+     class="form-signin w-100 m-auto">
+    <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+    <p>New User? <a href="{{ url_for('register') }}">Click to Register!</a></p>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="form-floating">
+            {{ form.username(size=32, class_="form-control") }}
+            {{ form.username.label }}
+        </div>
+        <p>
+            {% for error in form.username.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <div class="form-floating">
+            {{ form.password(size=32, class_="form-control") }}
+            {{ form.password.label }}
+        </div>
+        <p>
+            {% for error in form.password.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.remember_me(class_="form-check-input") }} {{ form.remember_me.label(class_="form-check-label") }}</p>
+        <p>{{ form.submit(class_="btn btn-primary w-100 py-2") }}</p>
+    </form>
+</div>
+{% endblock %}

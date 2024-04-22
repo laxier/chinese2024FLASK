@@ -1,0 +1,62 @@
+<html lang="ru">
+<head>
+    {% if title %}
+        <title>{{ title }} - 汉语中心</title>
+    {% else %}
+        <title>汉语中心</title>
+    {% endif %}
+</head>
+<style>
+    {% block styles %}
+    {% endblock %}
+</style>
+{{ bootstrap.load_css() }}
+<div class="container">
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom"
+            style="padding-left: calc(var(--bs-gutter-x)* .5); padding-right: calc(var(--bs-gutter-x)* .5)">
+        <div class="col-md-3 mb-2 mb-md-0">
+            <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
+                <svg class="bi" width="40" height="32" role="img" aria-label="Bootstrap">
+                    <use xlink:href="#bootstrap"></use>
+                </svg>
+            </a>
+        </div>
+
+        <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+            <li><a href="#" class="nav-link px-2 link-secondary">Home</a></li>
+            <li><a href="#" class="nav-link px-2 link-dark">Sets</a></li>
+            <li><a href="#" class="nav-link px-2 link-dark">Profile</a></li>
+        </ul>
+
+        <div class="col-md-3 text-end">
+            {% if current_user.is_anonymous %}
+                <a class="btn btn-outline-primary me-2" href="{{ url_for('login') }}">Login</a>
+            {% else %}
+                <a class="btn btn-outline-primary me-2" href="{{ url_for('logout') }}"> {{ current_user.username }} <br>
+                    Log-out</a>
+            {% endif %}
+        </div>
+    </header>
+</div>
+
+<body class="d-flex flex-column h-100">
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="container">
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endwith %}
+{% block content %}{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+<footer class="footer mt-auto py-3 bg-body-tertiary">
+    <div class="container">
+        <span class="text-body-secondary">Тимофеев Кирилл, 2024</span>
+    </div>
+</footer>
+</html>

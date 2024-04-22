@@ -1,12 +1,7 @@
-from flask import Flask
+from app import app, db
 
-app = Flask(__name__)
-
-
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
-
-
-if __name__ == '__main__':
-    app.run()
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        db.session.commit()
+    app.run(debug=True)
