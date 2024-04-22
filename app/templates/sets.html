@@ -7,9 +7,11 @@
             {% for deck in decks %}
                 <div style="display: flex;justify-content: space-between;">
                     <p>{{ deck.name }}</p>
+                    <a href="/deck/{{ deck.id }}" class="btn btn-outline-secondary">Open</a>
                     {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
                         <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>
                     {% endif %}
+                    <a href="/remove_deck/{{ deck.id }}" class="btn btn-outline-secondary">Remove</a>
                 </div>
             {% endfor %}
         {% else %}

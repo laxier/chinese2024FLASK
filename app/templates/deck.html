@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="container">
+        <h1>Deck {{ deck.name }}!</h1>
+        {% if deck.cards %}
+            {% for card in deck.cards %}
+                <div style="display: flex;justify-content: space-between;">
+                    <p>{{ card.chinese }}</p>
+                    <p>{{ card.transcription }}</p>
+                    <p>{{ card.translation }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>no cards yet</p>
+        {% endif %}
+        {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+            <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
+        {% endif %}
+    </main>
+{% endblock %}

@@ -15,7 +15,10 @@ class User(UserMixin, db.Model):
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
     decks_created: so.Mapped[Set["Deck"]] = so.relationship(back_populates="creator", cascade="all, delete-orphan",
-                                                             passive_deletes=True)
+                                                            passive_deletes=True)
+    card_performance: so.Mapped[Set["CardPerformance"]] = so.relationship(back_populates="user",
+                                                                          cascade="all, delete-orphan",
+                                                                          passive_deletes=True)
     decks: so.Mapped[Set["Deck"]] = so.relationship(secondary='user_decks', back_populates='users')
 
     def __repr__(self):
@@ -34,6 +37,10 @@ class Card(db.Model):
     transcription: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200))
     translation: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200))
     decks: so.Mapped[Set["Deck"]] = so.relationship(secondary='deck_cards', back_populates='cards')
+    card_performance: so.Mapped[Set["CardPerformance"]] = so.relationship(back_populates="card",
+                                                                          cascade="all, delete-orphan",
+                                                                          passive_deletes=True)
+
     def __init__(self, chinese):
         self.chinese = chinese
         try:
@@ -42,14 +49,11 @@ class Card(db.Model):
             print(f"Failed to fetch data for character {chinese}: {Exception}")
 
 
-
 class Deck(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(100))
-
     creator_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
     creator: so.Mapped[User] = so.relationship(back_populates="decks_created")
-
     users: so.Mapped[Set["User"]] = so.relationship('User', secondary='user_decks', back_populates='decks')
     cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks')
 
@@ -65,6 +69,16 @@ deck_cards = db.Table(
     db.Column('deck_id', db.Integer, db.ForeignKey('deck.id')),
     db.Column('card_id', db.Integer, db.ForeignKey('card.id'))
 )
+
+
+class CardPerformance(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    repetitions: so.Mapped[int] = so.mapped_column(sa.Integer)
+    right: so.Mapped[int] = so.mapped_column(sa.Integer)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
+    user: so.Mapped[User] = so.relationship(back_populates="card_performance")
+    card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id), nullable=False)
+    card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
 
 
 @login.user_loader

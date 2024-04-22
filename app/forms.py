@@ -44,3 +44,7 @@ class CardForm(FlaskForm):
     def validate_char(self, char):
         if has_chinese_char(char.data)==False:
             raise ValidationError('Please enter a chinese character!')
+
+class DeleteForm(FlaskForm):
+    assurance = BooleanField('Ты уверен?', validators=[DataRequired()])
+    submit = SubmitField('Удалить')
