@@ -5,7 +5,12 @@
         <h1>Hi, {{ current_user.username }}!</h1>
         {% if decks %}
             {% for deck in decks %}
-                <p>{{ deck.name }}</p>
+                <div style="display: flex;justify-content: space-between;">
+                    <p>{{ deck.name }}</p>
+                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+                        <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>
+                    {% endif %}
+                </div>
             {% endfor %}
         {% else %}
             <p>no decs yet</p>

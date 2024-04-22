@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="container">
+        <h1>Deck {{ deck.name }}!</h1>
+        {% if deck.cards %}
+            {% for card in deck.cards %}
+                <div style="display: flex;justify-content: space-between;">
+                    <p>{{ card.chinese }}</p>
+                    <p>{{ card.transcription }}</p>
+                    <p>{{ card.translation }}</p>
+                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+                        <a href="/delete_from_deck/{{ deck.id }}/{{ card.id }}"
+                           class="btn btn-outline-secondary">Delete</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>no cards yet</p>
+        {% endif %}
+        {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+            <form action="" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.char.label }}
+                {{ form.char(size=32, class_="form-control") }}
+                <p>
+                    {% for error in form.char.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                <p>{{ form.submit(class_="btn btn-primary w-100 py-2") }}</p>
+            </form>
+        {% endif %}
+    </main>
+{% endblock %}

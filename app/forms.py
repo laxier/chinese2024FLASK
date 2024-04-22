@@ -4,7 +4,7 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
 from app.models import User
-
+from chinese_tools import has_chinese_char
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -37,3 +37,10 @@ class RegistrationForm(FlaskForm):
 class DeckForm(FlaskForm):
     name = StringField('Deck name', validators=[DataRequired()])
     submit = SubmitField('Create')
+
+class CardForm(FlaskForm):
+    char = StringField('Chinese character:', validators=[DataRequired()])
+    submit = SubmitField('Add')
+    def validate_char(self, char):
+        if has_chinese_char(char.data)==False:
+            raise ValidationError('Please enter a chinese character!')
