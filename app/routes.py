@@ -2,13 +2,13 @@ from flask import render_template, flash, redirect, url_for
 from app import app
 from flask import request
 from flask_login import current_user, login_user
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, DeckForm
 from flask_login import logout_user
 from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
-from app.models import User
+from app.models import User, Deck, Card
 
 import os
 @app.route('/')
@@ -53,3 +53,16 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/decks', methods=['GET', 'POST'])
+@login_required
+def deck():
+    decks = current_user.decks
+    print(decks)
+    form = DeckForm()
+    if form.validate_on_submit():
+        deck = Deck(name = form.name.data)
+        deck.users.append(current_user)
+        db.session.add(deck)
+        db.session.commit()
+    return render_template("sets.html", title='My sets', decks=decks, form = form)

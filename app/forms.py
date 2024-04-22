@@ -33,3 +33,7 @@ class RegistrationForm(FlaskForm):
     def validate_password(self, password):
         if len(password.data) < 8:
             raise ValidationError('Your password should bot be less than 8 symbols')
+
+class DeckForm(FlaskForm):
+    name = StringField('Deck name', validators=[DataRequired()])
+    submit = SubmitField('Create')
