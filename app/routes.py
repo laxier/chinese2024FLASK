@@ -8,16 +8,26 @@ from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
-from app.models import User, Deck, Card, CardPerformance
-
-import os
+from app.models import User, Deck, Card, CardPerformance, deck_cards, user_decks
 
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    return render_template("index.html", title='Home Page')
+    sorted_mydecks = Deck.query \
+        .join(user_decks) \
+        .filter(user_decks.c.user_id == current_user.id) \
+        .order_by(user_decks.c.timestamp) \
+        .limit(5) \
+        .all()
+
+    perform = CardPerformance.query \
+                  .filter_by(user_id=current_user.id) \
+                  .order_by(CardPerformance.timestamp).limit(5).all()[::-1]
+
+    result_zip = zip(perform, [Card.query.get_or_404(element.card_id) for element in perform])
+    return render_template("index.html", title='Home Page', decks=sorted_mydecks, zip=result_zip)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -62,22 +72,34 @@ def logout():
 @app.route('/decks', methods=['GET', 'POST'])
 @login_required
 def my_decks():
-    mydecks = current_user.decks
-    print(mydecks)
+    # mydecks = current_user.decks
+    sorted_mydecks = Deck.query \
+        .join(user_decks) \
+        .filter(user_decks.c.user_id == current_user.id) \
+        .order_by(user_decks.c.timestamp) \
+        .all()
     form = DeckForm()
     if form.validate_on_submit():
         new_deck = Deck(name=form.name.data, creator=current_user)
         new_deck.users.add(current_user)
         db.session.add(new_deck)
         db.session.commit()
-    return render_template("sets.html", title='My sets', decks=mydecks, form=form)
+    return render_template("sets.html", title='My sets', decks=sorted_mydecks, form=form)
 
 
 @app.route('/deck/<int:id>')
 @login_required
 def deck(id):
     deck_curr = Deck.query.get_or_404(id)
-    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
+    words = Card.query \
+        .join(deck_cards) \
+        .filter(deck_cards.c.deck_id == deck_curr.id) \
+        .order_by(deck_cards.c.timestamp) \
+        .all()
+    result_zip = zip(words,
+                     [db.session.query(CardPerformance).filter_by(user_id=current_user.id, card_id=element.id).first()
+                      for element in words])
+    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr, zip=result_zip)
 
 
 @app.route('/remove_deck/<int:id>')
@@ -96,6 +118,16 @@ def remove_deck(id):
 @login_required
 def edit_deck(id):
     to_edit = Deck.query.get_or_404(id)
+    words = Card.query \
+        .join(deck_cards) \
+        .filter(deck_cards.c.deck_id == to_edit.id) \
+        .order_by(deck_cards.c.timestamp) \
+        .all()
+
+    result_zip = zip(words,
+                     [db.session.query(CardPerformance).filter_by(user_id=current_user.id, card_id=element.id).first()
+                      for element in words])
+
     form = CardForm()
     form2 = DeleteForm()
     if form.validate_on_submit():
@@ -111,8 +143,7 @@ def edit_deck(id):
                 db.session.commit()
                 flash('You have created the card')
             to_edit.cards.add(card)
-            perform = CardPerformance(user=current_user, card=card,
-                                      repetitions=0, right=0)
+            perform = CardPerformance(user=current_user, card=card)
             db.session.add(perform)
             db.session.commit()
             flash('You have added the card')
@@ -127,14 +158,15 @@ def edit_deck(id):
             return redirect('/decks')
         else:
             return "Action is not allowed"
-    return render_template("edit_deck.html", title=f"Deck {to_edit.name}", deck=to_edit, form=form, delete_form=form2)
+    return render_template("edit_deck.html", title=f"Deck {to_edit.name}", deck=to_edit, zip=result_zip,
+                           form=form, delete_form=form2)
 
 
 @app.route('/delete_from_deck/<int:deck_id>/<int:card_id>', methods=['GET', 'POST'])
 @login_required
 def delete_card_from_deck(deck_id, card_id):
-    deck = Deck.query.get(deck_id)
-    card = Card.query.get(card_id)
+    deck = Deck.query.get_or_404(deck_id)
+    card = Card.query.get_or_404(card_id)
 
     if deck is None or card is None:
         return "Deck or card not found."
@@ -145,3 +177,66 @@ def delete_card_from_deck(deck_id, card_id):
         return redirect(f'/edit_deck/{deck_id}')
     else:
         return "Card is not in the deck."
+
+
+@app.route('/perf_update/<int:deck_id>/<int:id>/<string:point>')
+@login_required
+def min_rep(deck_id, id, point):
+    performance = CardPerformance.query.get_or_404(id)
+    if performance is not None:
+        print(point)
+        if point == "right":
+            performance.right = performance.right + 1
+            performance.repetitions = performance.repetitions + 1
+        elif point == "wrong":
+            performance.repetitions = performance.repetitions + 1
+        elif point == "null":
+            performance.repetitions = 0
+            performance.right = 0
+        else:
+            return "Error"
+        db.session.commit()
+        return redirect(f'/edit_deck/{deck_id}')
+
+
+@app.route('/null/<int:id>')
+@login_required
+def obnulit(id):
+    performance = CardPerformance.query.get_or_404(id)
+    if performance is not None:
+        performance.right = 0
+        performance.repetitions = 0
+        db.session.commit()
+    else:
+        return "Error"
+    return redirect("/words")
+
+
+@app.route('/delete_card/<int:id>')
+@login_required
+def delete_card(id):
+    if current_user.username == "admin":
+        to_delete = Card.query.get_or_404(id)
+        if to_delete:
+            for performance in to_delete.card_performance:
+                db.session.delete(performance)
+        db.session.delete(to_delete)
+        db.session.commit()
+    else:
+        return "Недостаточно прав"
+    return redirect("/words")
+
+
+@app.route('/words')
+@login_required
+def all_words():
+    if current_user.username == "admin":
+        cards = Card.query.all()
+        result_zip = zip(cards, cards)
+        return render_template("words.html", title="Все слова", zip=result_zip)
+    else:
+        perform = CardPerformance.query \
+                      .filter_by(user_id=current_user.id) \
+                      .order_by(CardPerformance.timestamp).all()[::-1]
+        result_zip = zip(perform, [Card.query.get_or_404(element.card_id) for element in perform])
+        return render_template("words.html", title="Все слова", zip=result_zip)

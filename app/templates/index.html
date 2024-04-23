@@ -1,7 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="container">
-    <h1>Hi, {{ current_user.username }}!</h1>
-</main>
+    <main class="container">
+        <h1>Hi, {{ current_user.username }}!</h1>
+        <h1>Недавние модули</h1>
+        {% if decks %}
+            {% for deck in decks %}
+                <div style="display: flex;justify-content: space-between;">
+                    <p>{{ deck.name }}</p>
+                    <a href="/deck/{{ deck.id }}" class="btn btn-outline-secondary">Open</a>
+                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+                        <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Пока ничего нет</p>
+        {% endif %}
+
+        <h1>Недавние слова</h1>
+        {% if current_user.card_performance %}
+            <div class="container">
+                <div class="table-container">
+                    <div class="table-row heading">
+                        <div class="row-item">Слово</div>
+                        <div class="row-item">Произношение</div>
+                        <div class="row-item">Перевод</div>
+                        <div class="row-item">Статистика</div>
+                        <div class="row-item">Действия</div>
+                    </div>
+                    {% for performance, card in zip %}
+                        <div class="table-row">
+                            <div class="row-item">{{ card.chinese }}</div>
+                            <div class="row-item">{{ card.transcription }}</div>
+                            <div class="row-item">{{ card.translation }}</div>
+                            <div class="row-item">{{ performance.accuracy_percentage }}%</div>
+                            <div class="row-item">
+                                <a href="/null/{{ performance.id }}" class="btn btn-outline-secondary">Обнулить</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <p>Пока ничего нет</p>
+        {% endif %}
+    </main>
 {% endblock %}

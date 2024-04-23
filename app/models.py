@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from typing import Optional
+from datetime import datetime, timezone
 from typing import List, Set
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -61,24 +62,39 @@ class Deck(db.Model):
 user_decks = db.Table(
     'user_decks',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('deck_id', db.Integer, db.ForeignKey('deck.id'))
+    db.Column('deck_id', db.Integer, db.ForeignKey('deck.id')),
+    db.Column('timestamp', db.DateTime, server_default=db.func.now())
 )
 
 deck_cards = db.Table(
     'deck_cards',
     db.Column('deck_id', db.Integer, db.ForeignKey('deck.id')),
-    db.Column('card_id', db.Integer, db.ForeignKey('card.id'))
+    db.Column('card_id', db.Integer, db.ForeignKey('card.id')),
+    db.Column('timestamp', db.DateTime, server_default=db.func.now())
 )
 
 
 class CardPerformance(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    repetitions: so.Mapped[int] = so.mapped_column(sa.Integer)
-    right: so.Mapped[int] = so.mapped_column(sa.Integer)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
+    repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
+    right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
     user: so.Mapped[User] = so.relationship(back_populates="card_performance")
-    card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id), nullable=False)
+    timestamp: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
+
+    @property
+    def accuracy_percentage(self):
+        if self.repetitions == 0:
+            return 0
+        if self.repetitions > 5:
+            return round((self.right / self.repetitions) * 100)
+        else:
+            return round((self.right / 5) * 100)
+
+    def __repr__(self):
+        return f'{self.right}/{self.repetitions}'
 
 
 @login.user_loader

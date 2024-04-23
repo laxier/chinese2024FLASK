@@ -4,18 +4,31 @@
     <main class="container">
         <h1>Deck {{ deck.name }}!</h1>
         {% if deck.cards %}
-            {% for card in deck.cards %}
-                <div style="display: flex;justify-content: space-between;">
-                    <p>{{ card.chinese }}</p>
-                    <p>{{ card.transcription }}</p>
-                    <p>{{ card.translation }}</p>
+                <div class="table-container">
+                    <div class="table-row heading">
+                        <div class="row-item">Слово</div>
+                        <div class="row-item">Произношение</div>
+                        <div class="row-item">Перевод</div>
+                        <div class="row-item">Статистика</div>
+                        <div class="row-item">Раунды</div>
+                    </div>
+                    {% for card, performance in zip %}
+                        <div class="table-row">
+                            <div class="row-item">{{ card.chinese }}</div>
+                            <div class="row-item">{{ card.transcription }}</div>
+                            <div class="row-item">{{ card.translation }}</div>
+                            <div class="row-item">{{ performance.accuracy_percentage }}%</div>
+                            <div class="row-item">{{ performance }}</div>
+                        </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
         {% else %}
             <p>no cards yet</p>
         {% endif %}
         {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
-            <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
+            <div class="bottom-element">
+                <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
+            </div>
         {% endif %}
     </main>
 {% endblock %}
