@@ -6,8 +6,10 @@ from bs4 import BeautifulSoup
 def has_chinese_char(word):
     if word is None:
         return False
-    else:
-        return bool(re.search('[\u4e00-\u9fff]', word))
+    for char in word:
+        if bool(re.match('[\u4e00-\u9fff]', char))==0:
+            return False
+    return True
 
 
 def searchWord(word):

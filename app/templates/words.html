@@ -8,7 +8,7 @@
         {% else %}
             <h1>Список изученных слов</h1>
         {% endif %}
-        {% if current_user.card_performance %}
+        {% if zip %}
             <div class="container">
                 <div class="table-container">
                     <div class="table-row heading">
@@ -29,14 +29,12 @@
                             {% if current_user.username != "admin" %}
                                 <div class="row-item">{{ performance.accuracy_percentage }}%</div>
                                 <div class="row-item">{{ performance }}</div>
-                                <div class="row-item"><a href="/null/{{ performance.id }}"
+                                <div class="row-item"><a href="/words/null/{{ performance.id }}"
                                                          class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% else %}
                                 <div class="row-item">
                                     <a href="/delete_card/{{ card.id }}" class="btn btn-primary">Удалить</a>
-                                    <a href="/null/{{ performance.id }}"
-                                       class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% endif %}
 

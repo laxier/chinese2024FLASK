@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 import sqlalchemy as sa
 from app import db
@@ -48,3 +48,11 @@ class CardForm(FlaskForm):
 class DeleteForm(FlaskForm):
     assurance = BooleanField('Ты уверен?', validators=[DataRequired()])
     submit = SubmitField('Удалить')
+
+class AddForm(FlaskForm):
+    text = TextAreaField('Введи слова с новой строки', validators=[DataRequired()])
+    submit = SubmitField('Добавить')
+    def validate_text(self, text):
+        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace("\u200b", "")
+        if has_chinese_char(cleaned_text)==False:
+            raise ValidationError('Please enter a chinese character!')

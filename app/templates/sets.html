@@ -3,17 +3,40 @@
 {% block content %}
     <main class="container">
         <h1>Мои модули</h1>
-        {% if decks %}
+        <div class="d-flex flex-row bd-highlight mb-3">
+            {% if decks %}
             {% for deck in decks %}
-                <div style="display: flex;justify-content: space-between;">
-                    <p>{{ deck.name }}</p>
-                    <a href="/deck/{{ deck.id }}" class="btn btn-outline-secondary">Open</a>
-                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
-                        <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>
-                    {% endif %}
-                    <a href="/remove_deck/{{ deck.id }}" class="btn btn-outline-secondary">Remove</a>
+                {#            {% for deck, time in zip2 %}#}
+                <div class="col-md-3 mb-3"> <!-- Используем Bootstrap для создания колонок по 4 элемента в строке -->
+                    <div class="card" style="width: 100%;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ deck.name }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">by {{ deck.creator.username }}</h6>
+                            <a href="/deck/{{ deck.id }}" class="card-link">Open</a>
+                            <a href="/edit_deck/{{ deck.id }}" class="card-link">Edit</a>
+                        </div>
+                        {#                        <div class="card-footer text-muted">#}
+                        {#                            {{ time }}#}
+                        {#                        </div>#}
+                    </div>
                 </div>
+                {% if loop.index is divisibleby 4 %}
+                    <!-- Добавляем условие для открытия нового ряда после каждых 4 элементов -->
+                    </div><div class="d-flex flex-row bd-highlight mb-3">
+                {% endif %}
             {% endfor %}
+            </div>
+{#        {% if decks %}#}
+{#            {% for deck in decks %}#}
+{#                <div style="display: flex;justify-content: space-between;">#}
+{#                    <p>{{ deck.name }}</p>#}
+{#                    <a href="/deck/{{ deck.id }}" class="btn btn-outline-secondary">Open</a>#}
+{#                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}#}
+{#                        <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>#}
+{#                    {% endif %}#}
+{#                    <a href="/remove_deck/{{ deck.id }}" class="btn btn-outline-secondary">Remove</a>#}
+{#                </div>#}
+{#            {% endfor %}#}
         {% else %}
             <p>no decs yet</p>
         {% endif %}
