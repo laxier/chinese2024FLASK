@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from app import db
 from datetime import datetime
 from app.models import User, Deck, Card, CardPerformance, deck_cards, user_decks
+from flask import jsonify, abort
 
 
 @app.route('/')
@@ -22,16 +23,12 @@ def index():
         .order_by(user_decks.c.timestamp.desc()) \
         .limit(4) \
         .all()
-    zip_for_decks = zip(sorted_mydecks,
-                        [db.session.query(user_decks).filter_by(user_id=current_user.id,
-                                                                deck_id=element.id).first().timestamp
-                         for element in sorted_mydecks])
 
     perform = CardPerformance.query \
         .filter_by(user_id=current_user.id) \
         .order_by(CardPerformance.timestamp.desc()).limit(5).all()
-    result_zip = zip(perform, [Card.query.get_or_404(element.card_id) for element in perform])
-    return render_template("index.html", title='Home Page', decks=sorted_mydecks, zip2=zip_for_decks, zip=result_zip)
+    return render_template("index.html", title='Home Page', decks=sorted_mydecks, perform=perform,
+                           now=datetime.utcnow())
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -84,9 +81,10 @@ def my_decks():
     form = DeckForm()
     if form.validate_on_submit():
         new_deck = Deck(name=form.name.data, creator=current_user)
-        new_deck.users.add(current_user)
         db.session.add(new_deck)
         db.session.commit()
+        flash("Deck was created")
+        return redirect('/decks')
     return render_template("sets.html", title='My sets', decks=sorted_mydecks, form=form)
 
 
@@ -94,15 +92,7 @@ def my_decks():
 @login_required
 def deck(id):
     deck_curr = Deck.query.get_or_404(id)
-    words = Card.query \
-        .join(deck_cards) \
-        .filter(deck_cards.c.deck_id == deck_curr.id) \
-        .order_by(deck_cards.c.timestamp) \
-        .all()
-    result_zip = zip(words,
-                     [db.session.query(CardPerformance).filter_by(user_id=current_user.id, card_id=element.id).first()
-                      for element in words])
-    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr, zip=result_zip)
+    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
 
 
 @app.route('/remove_deck/<int:id>')
@@ -121,39 +111,30 @@ def remove_deck(id):
 @login_required
 def edit_deck(id):
     to_edit = Deck.query.get_or_404(id)
-    words = Card.query \
-        .join(deck_cards) \
-        .filter(deck_cards.c.deck_id == to_edit.id) \
-        .order_by(deck_cards.c.timestamp) \
-        .all()
-
-    result_zip = zip(words,
-                     [db.session.query(CardPerformance).filter_by(user_id=current_user.id, card_id=element.id).first()
-                      for element in words])
-
     form = CardForm()
     form2 = DeleteForm()
     form3 = AddForm()
     if form.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            card = Card.query.filter_by(chinese=form.char.data).first()
+            card = Card.query.filter_by(chinese=form.char.data.replace(u"\u200b", "")).first()
             if card:
                 if card in to_edit.cards:
                     flash('Card already exists')
-                    return redirect(f'/edit_deck/{id}')
+                else:
+                    card.create_rel(user=current_user)
+                    to_edit.cards.add(card)
+                    flash('Card added')
             else:
-                card = Card(chinese=form.char.data)
+                card = Card(chinese=form.char.data.replace(u"\u200b", ""))
                 db.session.add(card)
-                db.session.commit()
-                flash('You have created the card')
-            to_edit.cards.add(card)
-            perform = CardPerformance(user=current_user, card=card)
-            db.session.add(perform)
+                card.create_rel(user=current_user)
+                to_edit.cards.add(card)
+                flash('Created and Added the Card')
             db.session.commit()
-            flash('You have added the card')
             return redirect(f'/edit_deck/{id}')
         else:
             return "Action is not allowed"
+
     if form2.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
             db.session.delete(to_edit)
@@ -164,40 +145,32 @@ def edit_deck(id):
             return "Action is not allowed"
     if form3.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            words = form3.text.data.replace(" ", "").replace("\u200b", "").split("\r\n")
-            words_count = 0
-            added_count = 0
-            exists_count = 0
-            created_count = 0
-            err_count = 0
+            words = form3.text.data.replace(" ", "").replace(u"\u200b", "").split("\r\n")
+            dictionary = dict()
             for word in words:
-                if word:
-                    try:
-                        card = Card.query.filter_by(chinese=word).first()
-                        if card:
-                            if card in to_edit.cards:
-                                exists_count += 1
+                try:
+                    card = Card.query.filter_by(chinese=word).first()
+                    if card:
+                        if card in to_edit.cards:
+                            dictionary[word] = 'Card already exists'
                         else:
-                            card = Card(chinese=word)
-                            db.session.add(card)
-                            db.session.commit()
-                            created_count += 1
+                            card.create_rel(user=current_user)
+                            to_edit.cards.add(card)
+                            dictionary[word] = 'Card added'
+                    else:
+                        card = Card(chinese=word)
+                        db.session.add(card)
+                        card.create_rel(user=current_user)
                         to_edit.cards.add(card)
-                        perform = CardPerformance(user=current_user, card=card)
-                        db.session.add(perform)
-                        db.session.commit()
-                        added_count += 1
-                    except Exception as e:
-                        print(e)
-                        err_count += 1
-                    words_count += 1
-
-            flash(
-                f"{words_count} words; added {added_count}; Created {created_count} cards; Already exists {exists_count}; {err_count} errors")
-            return redirect(f'/edit_deck/{id}')
+                        dictionary[word] = 'Card Created and Added'
+                    db.session.commit()
+                except Exception as e:
+                    dictionary[word] = e
+            return render_template("edit_deck.html", title=f"Deck {to_edit.name}", deck=to_edit,
+                                   form=form, delete_form=form2, add_form=form3, log_table=dictionary)
         else:
             return "Action is not allowed"
-    return render_template("edit_deck.html", title=f"Deck {to_edit.name}", deck=to_edit, zip=result_zip,
+    return render_template("edit_deck.html", title=f"Deck {to_edit.name}", deck=to_edit,
                            form=form, delete_form=form2, add_form=form3)
 
 
@@ -229,10 +202,6 @@ def min_rep(deck_id, id, point):
             performance.timestamp = datetime.utcnow()
         elif point == "wrong":
             performance.repetitions = performance.repetitions + 1
-            performance.timestamp = datetime.utcnow()
-        elif point == "null":
-            performance.repetitions = 0
-            performance.right = 0
             performance.timestamp = datetime.utcnow()
         else:
             return "Error"
@@ -272,13 +241,63 @@ def delete_card(id):
 @app.route('/words')
 @login_required
 def all_words():
+    cards = Card.query.all()
+    return render_template("words.html", title="Все слова", words=cards)
+
+
+@app.route('/<string:back>/get_childs/<int:id>')
+@login_required
+def get_childs(id, back):
     if current_user.username == "admin":
-        cards = Card.query.all()
-        result_zip = zip(cards, cards)
-        return render_template("words.html", title="Все слова", zip=result_zip)
+        card = Card.query.get_or_404(id)
+        flash(card.children_poisk())
+        db.session.commit()
+        return redirect(f"/{back}")
     else:
-        perform = CardPerformance.query \
-                      .filter_by(user_id=current_user.id) \
-                      .order_by(CardPerformance.timestamp.desc()).all()[::-1]
-        result_zip = zip(perform, [Card.query.get_or_404(element.card_id) for element in perform])
-        return render_template("words.html", title="Все слова", zip=result_zip)
+        return "Недостаточно прав"
+
+
+@app.route('/api/<string:type>/<int:deck_id>/<int:user_id>')
+def api(type, deck_id, user_id):
+    if type == "deck":
+        deck = Deck.query.get_or_404(deck_id)
+        cards = [card.to_dict() for card in deck.sort_timestamp_by_user(user_id)]
+        return jsonify(cards)
+    if type == "deck_user_time":
+        deck = Deck.query.get_or_404(deck_id)
+        cards = [card.to_dict() for card in deck.sort_timestamp_by_user(user_id)]
+        return jsonify(cards)
+    if type == "deck_user_performance":
+        deck = Deck.query.get_or_404(deck_id)
+        cards = [card.to_dict() for card in deck.sort_progress_by_user(user_id)]
+        return jsonify(cards)
+
+
+@app.route('/test/<int:id>')
+def test(id):
+    deck_curr = Deck.query.get_or_404(id)
+    return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
+
+
+@app.route('/api/update-performance/<string:action>', methods=['POST'])
+def update_performance(action):
+    data = request.get_json()
+    cardId = data.get('id')
+    if cardId is None:
+        return jsonify({'error': 'Missing performance ID'})
+
+    performance = CardPerformance.query.filter_by(user_id = current_user.id, card_id = cardId).first()
+    if performance is None:
+        return jsonify({'error': 'Performance not found'})
+        print(action)
+
+    if action == "correct":
+        performance.correct()
+        db.session.commit()
+        return jsonify({'message': 'Right repetition processed successfully'})
+    if action == "incorrect":
+        performance.incorrect()
+        db.session.commit()
+        return jsonify({'message': 'Wrong repetition processed successfully'})
+    else:
+        return jsonify({'error': 'Unknown key'})

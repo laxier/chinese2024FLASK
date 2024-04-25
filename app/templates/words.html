@@ -3,41 +3,47 @@
 {% block content %}
     <main class="container">
         <h1>Hi {{ current_user.username }}!</h1>
-        {% if current_user.username == "admin" %}
-            <h1>Список слов</h1>
-        {% else %}
-            <h1>Список изученных слов</h1>
-        {% endif %}
-        {% if zip %}
+        <h1>Список слов на сайте</h1>
+        {% if words %}
             <div class="container">
                 <div class="table-container">
                     <div class="table-row heading">
                         <div class="row-item">Слово</div>
                         <div class="row-item">Произношение</div>
                         <div class="row-item">Перевод</div>
-                        {% if current_user.username != "admin" %}
-                            <div class="row-item">Статистика</div>
-                            <div class="row-item">Раунды</div>
-                        {% endif %}
+                        <div class="row-item">Статистика</div>
+                        <div class="row-item">Раунды</div>
                         <div class="row-item">Действия</div>
+                        {% if current_user.username == "admin" %}
+                            <div class="row-item">Администрирование</div>
+                            <div class="row-item">Администрирование</div>
+                        {% endif %}
                     </div>
-                    {% for performance, card in zip %}
+                    {% for card in words %}
                         <div class="table-row">
                             <div class="row-item">{{ card.chinese }}</div>
                             <div class="row-item">{{ card.transcription }}</div>
                             <div class="row-item">{{ card.translation }}</div>
-                            {% if current_user.username != "admin" %}
-                                <div class="row-item">{{ performance.accuracy_percentage }}%</div>
-                                <div class="row-item">{{ performance }}</div>
-                                <div class="row-item"><a href="/words/null/{{ performance.id }}"
-                                                         class="btn btn-outline-secondary">Обнулить</a>
+                            {% if card.perf_by_user(current_user.id) %}
+                                <div class="row-item">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                                <div class="row-item">
+                                    <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
+                                       class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% else %}
+                                <div class="row-item">-</div>
+                                <div class="row-item">-</div>
+                                <div class="row-item">-</div>
+                            {% endif %}
+                            {% if current_user.username == "admin" %}
                                 <div class="row-item">
                                     <a href="/delete_card/{{ card.id }}" class="btn btn-primary">Удалить</a>
                                 </div>
+                                <div class="row-item">
+                                    <a href="/words/get_childs/{{ card.id }}" class="btn btn-primary">Разложить</a>
+                                </div>
                             {% endif %}
-
                         </div>
                     {% endfor %}
                 </div>

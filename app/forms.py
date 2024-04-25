@@ -42,7 +42,8 @@ class CardForm(FlaskForm):
     char = StringField('Chinese character:', validators=[DataRequired()])
     submit = SubmitField('Add')
     def validate_char(self, char):
-        if has_chinese_char(char.data)==False:
+        cleaned_text = char.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "")
+        if has_chinese_char(cleaned_text)==False:
             raise ValidationError('Please enter a chinese character!')
 
 class DeleteForm(FlaskForm):
@@ -53,6 +54,7 @@ class AddForm(FlaskForm):
     text = TextAreaField('Введи слова с новой строки', validators=[DataRequired()])
     submit = SubmitField('Добавить')
     def validate_text(self, text):
-        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace("\u200b", "")
+        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "")
         if has_chinese_char(cleaned_text)==False:
             raise ValidationError('Please enter a chinese character!')
+

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="container">
+        <h1>Флеш карты. Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
+        {% if deck.cards %}
+            <div class="container" style="margin-bottom: 2%">
+                <div id="flashcard" class="flashcard">
+                    <div class="card-header" style="width:100%">
+                        <div class="progress">
+                            <div id="quiz-progress" class="progress-bar bg-info" role="progressbar"></div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="front">
+                            <h5 id="front-character"
+                                style="font-family: KaiTi, STKaiti, DFKai-SB, BiauKai, Arial !important; font-size:70px;">
+                                妈妈</h5>
+                        </div>
+                        <div class="back" style="display: none;">
+                            <h6 id="front-pronunciation">mama</h6>
+                            <h6 class="card-title" id="back-translation">сущ. мама</h6>
+                        </div>
+                        <div class="button-container">
+                            <button id="quiz-right" class="btn btn-outline-secondary">Верно</button>
+                            <button id="quiz-wrong" class="btn btn-outline-secondary"> Неверно</button>
+                        </div>
+                        <div class="button-container">
+                            <button id="back" class="btn btn-outline-secondary" style="width:100%">Назад
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if deck.cards %}
+            <div class="table-container">
+            <div class="table-row heading">
+                <div class="row-item">Слово</div>
+                <div class="row-item">Произношение</div>
+                <div class="row-item">Перевод</div>
+                <div class="row-item">Текущий прогресс</div>
+            </div>
+            {% for card in deck.sort_progress_by_user(current_user.id) %}
+                <div class="table-row">
+                    <div class="row-item">{{ card.chinese }}</div>
+                    <div class="row-item">{{ card.transcription }}</div>
+                    <div class="row-item">{{ card.translation }}</div>
+                    <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+        </div>
+    </main>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        let flashcards = []
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/deck_user_performance/{{ deck.id }}/{{ current_user.id }}');
+                const data = await response.json();
+                flashcards = data;
+                console.log(flashcards);
+
+                const flashcard = document.getElementById("flashcard");
+                const rows = document.querySelectorAll('.table-row:not(.heading)');
+                const progress_bar = document.getElementById("quiz-progress");
+                progress_bar.ariaValueMax = flashcards.length
+                const increment = 100 / flashcards.length;
+                let progress = 0;
+                let currentFlashcardIndex = 0;
+
+                flashcard.addEventListener("click", function (event) {
+                    if (event.target.tagName === 'BUTTON') {  // Ensure the click is not on the card itself
+                        return;
+                    }
+                    var front = document.querySelector('#flashcard .front');
+                    var back = document.querySelector('#flashcard .back');
+
+                    if (front.style.display !== "none") {
+                        front.style.display = "none";
+                        back.style.display = "flex";
+                    } else {
+                        front.style.display = "flex";
+                        back.style.display = "none";
+                    }
+                });
+
+
+                const prev_butt = document.getElementById("back")
+                prev_butt.addEventListener('click', getPrevFlashcard);
+
+                function getPrevFlashcard() {
+                    if (currentFlashcardIndex > 0) {
+                        currentFlashcardIndex--;
+                        progress -= increment;
+                        rows[currentFlashcardIndex].style.color = 'black'
+                        progress_bar.style.width = `${progress}%`;
+                        displayFlashcard(currentFlashcardIndex);
+                    } else {
+                        alert("Вы достигли начала списка flashcards.");
+                    }
+                }
+
+                function getNextFlashcard() {
+                    if (currentFlashcardIndex < flashcards.length - 1) {
+                        currentFlashcardIndex++;
+                        progress += increment;
+                        console.log(progress);
+                        progress_bar.style.width = `${progress}%`;
+                        displayFlashcard(currentFlashcardIndex);
+                    } else {
+                        alert("Вы достигли конца списка flashcards.");
+                    }
+                }
+
+                const correct = document.getElementById("quiz-right")
+                correct.addEventListener('click', markCorrect);
+
+                function markCorrect() {
+                    rows[currentFlashcardIndex].style.color = 'green'
+                    let currentFlashcard = flashcards[currentFlashcardIndex];
+                    fetch('/api/update-performance/correct', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            'id': currentFlashcard['id'],
+                        }),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Repetitions count updated successfully');
+                            getNextFlashcard();
+                        })
+                        .catch(error => {
+                            console.error('Error updating repetitions count:', error);
+                        });
+                }
+
+                const incorrect = document.getElementById("quiz-wrong")
+                incorrect.addEventListener('click', markIncorrect);
+
+                function markIncorrect() {
+                    rows[currentFlashcardIndex].style.color = 'red'
+                    let currentFlashcard = flashcards[currentFlashcardIndex];
+                    fetch('/api/update-performance/incorrect', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            'id': currentFlashcard['id'],
+                        }),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Repetitions count updated successfully');
+                            getNextFlashcard();
+                        })
+                        .catch(error => {
+                            console.error('Error updating repetitions count:', error);
+                        });
+                }
+
+                function displayFlashcard(index) {
+                    let currentFlashcard = flashcards[index];
+                    var front = document.querySelector('#flashcard .front');
+                    var back = document.querySelector('#flashcard .back');
+                    front.style.display = "flex";
+                    back.style.display = "none";
+                    document.getElementById("front-character").textContent = currentFlashcard['chinese'];
+                    document.getElementById("front-pronunciation").textContent = currentFlashcard['transcription'];
+                    document.getElementById("back-translation").textContent = currentFlashcard['translation'];
+                }
+
+                displayFlashcard(currentFlashcardIndex);
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+            }
+        }
+
+        fetchData();
+    </script>
+{% endblock %}

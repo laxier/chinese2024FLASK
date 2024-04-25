@@ -2,7 +2,21 @@
 
 {% block content %}
     <main class="container">
-        <h1>Deck {{ deck.name }}!</h1>
+        <h1> Deck <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
+        {% if log_table %}
+            <div class="table-container">
+            <div class="table-row heading">
+                <div class="row-item">Слово</div>
+                <div class="row-item"></div>
+            </div>
+            {% for key, value in log_table.items() %}
+                <div class="table-row">
+                    <div class="row-item">{{ key }}</div>
+                    <div class="row-item">{{ value }}</div>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
         {% if deck.cards %}
             <div class="table-container">
                 <div class="table-row heading">
@@ -16,17 +30,17 @@
                         <div class="row-item">Убрать</div>
                     {% endif %}
                 </div>
-                {% for card, performance in zip %}
+                {% for card in deck.cards %}
                     <div class="table-row">
                         <div class="row-item">{{ card.chinese }}</div>
                         <div class="row-item">{{ card.transcription }}</div>
                         <div class="row-item">{{ card.translation }}</div>
-                        <div class="row-item">{{ performance.accuracy_percentage }}%</div>
-                        <div class="row-item">{{ performance }}</div>
+                        <div class="row-item">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                        <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
                         <div class="row-item">
-                            <a href="/perf_update/{{ deck.id }}/{{ performance.id }}/right"
+                            <a href="/perf_update/{{ deck.id }}/{{ card.perf_by_user(current_user.id).id }}/right"
                                class="btn btn-outline-secondary">+1</a>
-                            <a href="/perf_update/{{ deck.id }}/{{ performance.id }}/wrong"
+                            <a href="/perf_update/{{ deck.id }}/{{ card.perf_by_user(current_user.id).id }}/wrong"
                                class="btn btn-outline-secondary">-1</a>
                         </div>
                         {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}

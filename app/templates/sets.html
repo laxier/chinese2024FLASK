@@ -3,58 +3,45 @@
 {% block content %}
     <main class="container">
         <h1>Мои модули</h1>
-        <div class="d-flex flex-row bd-highlight mb-3">
-            {% if decks %}
-                {% for deck in decks %}
-                    {#            {% for deck, time in zip2 %}#}
-                    <div class="col-md-3 mb-3">
-                        <!-- Используем Bootstrap для создания колонок по 4 элемента в строке -->
-                        <div class="card" style="width: 100%;">
+        <div class="container">
+            <div class="cards">
+                {% if decks %}
+                    {% for deck in decks %}
+                        <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title">{{ deck.name }}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">by {{ deck.creator.username }}</h6>
                                 <a href="/deck/{{ deck.id }}" class="card-link">Open</a>
+                                <a href="/test/{{ deck.id }}" class="card-link">Test</a>
                                 {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
                                     <a href="/edit_deck/{{ deck.id }}" class="card-link">Edit</a>
                                 {% endif %}
                                 <a href="/remove_deck/{{ deck.id }}" class="card-link">Remove</a>
                             </div>
                             <div class="card-footer text-muted">
-                                ВРЕМЯ
+                                {{ moment(deck.timestamp_by_user(current_user.id)).format('lll') }}
                             </div>
                         </div>
-                    </div>
-                    {% if loop.index is divisibleby 4 %}
-                        <!-- Добавляем условие для открытия нового ряда после каждых 4 элементов -->
-                        </div>
-                        <div class="d-flex flex-row bd-highlight mb-3">
-                    {% endif %}
-                {% endfor %}
-            </div>
-                {#        {% if decks %}#}
-                {#            {% for deck in decks %}#}
-                {#                <div style="display: flex;justify-content: space-between;">#}
-                {#                    <p>{{ deck.name }}</p>#}
-                {#                    <a href="/deck/{{ deck.id }}" class="btn btn-outline-secondary">Open</a>#}
-                {#                    {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}#}
-                {#                        <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Edit</a>#}
-                {#                    {% endif %}#}
-                {#                    <a href="/remove_deck/{{ deck.id }}" class="btn btn-outline-secondary">Remove</a>#}
-                {#                </div>#}
-                {#            {% endfor %}#}
-            {% else %}
-                <p>no decs yet</p>
-            {% endif %}
-        <form action="" method="post" novalidate>
-            {{ form.hidden_tag() }}
-            {{ form.name.label }}
-            {{ form.name(size=32, class_="form-control") }}
-            <p>
-                {% for error in form.name.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            <p>{{ form.submit(class_="btn btn-primary w-100 py-2") }}</p>
-        </form>
+                        {% if loop.index is divisibleby 4 %}
+                            </div>
+                            <div class="cards">
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <p>no decs yet</p>
+                {% endif %}
+            <form action="" method="post" style="width: 95%; align-content: center; margin: 0 auto;">
+                {{ form.hidden_tag() }}
+                {{ form.name.label }}
+                {{ form.name(size=32, class_="form-control") }}
+                <p>
+                    {% for error in form.name.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                <p>{{ form.submit(class_="btn btn-primary w-100 py-2") }}</p>
+            </form>
+        </div>
 
     </main>
 {% endblock %}
