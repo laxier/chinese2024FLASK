@@ -77,24 +77,22 @@
     </main>
 {% endblock %}
 
-
-<script>
+{% if current_user.is_authenticated %}
     {% block scripts %}
-        window.addEventListener("load", function () {
-            console.log(document)
-            var accuracyCells = document.querySelectorAll('.percent');
-            console.log(accuracyCells)
-            accuracyCells.forEach(function (cell) {
-                var accuracy = parseInt(cell.textContent);
-                if (accuracy >= 80) {
-                    cell.classList.add('green');
-                } else if (accuracy >= 60) {
-                    cell.classList.add('yellow');
-                } else if (accuracy >= 20) {
-                    cell.classList.add('red')
-                }
+        <script>
+            window.addEventListener("load", function () {
+                var accuracyCells = document.querySelectorAll('.percent');
+                accuracyCells.forEach(function (cell) {
+                    var accuracy = parseInt(cell.textContent);
+                    if (accuracy >= 80) {
+                        cell.classList.add('green');
+                    } else if (accuracy >= 60) {
+                        cell.classList.add('yellow');
+                    } else if (accuracy >= 20) {
+                        cell.classList.add('red')
+                    }
+                });
             });
-        });
+        </script>
     {% endblock %}
-</script>
-
+{% endif %}

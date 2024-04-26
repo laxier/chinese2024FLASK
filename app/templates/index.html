@@ -45,7 +45,7 @@
                             <div class="row-item">{{ performance.card.chinese }}</div>
                             <div class="row-item">{{ performance.card.transcription }}</div>
                             <div class="row-item">{{ performance.card.translation }}</div>
-                            <div class="row-item">{{ performance.accuracy_percentage }}%</div>
+                            <div class="row-item percent">{{ performance.accuracy_percentage }}%</div>
                             <div class="row-item">
                                 <a href="/index/null/{{ performance.id }}"
                                    class="btn btn-outline-secondary">Обнулить</a>
@@ -58,4 +58,22 @@
             <div class="container"><p>Пока ничего нет</p></div>
         {% endif %}
     </main>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        window.addEventListener("load", function () {
+            var accuracyCells = document.querySelectorAll('.percent');
+            accuracyCells.forEach(function (cell) {
+                var accuracy = parseInt(cell.textContent);
+                if (accuracy >= 80) {
+                    cell.classList.add('green');
+                } else if (accuracy >= 60) {
+                    cell.classList.add('yellow');
+                } else if (accuracy >= 20) {
+                    cell.classList.add('red')
+                }
+            });
+        });
+    </script>
 {% endblock %}
