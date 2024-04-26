@@ -139,8 +139,7 @@ class Deck(db.Model):
     creator_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
     creator: so.Mapped[User] = so.relationship(back_populates="decks_created")
     users: so.Mapped[Set["User"]] = so.relationship('User', secondary='user_decks', back_populates='decks')
-    cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks',
-                                                    order_by='deck_cards.c.timestamp')
+    cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks')
     def __init__(self, name, creator):
         self.name = name
         self.creator = creator
