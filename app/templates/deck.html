@@ -6,8 +6,13 @@
         <div class="container">
             {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
                 <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
-                <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
             {% endif %}
+            {% if deck in current_user.decks %}
+                <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
+            {% else %}
+                <a href="/add_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
+            {% endif %}
+
         </div>
         {% if deck.cards %}
             <div class="table-container">
@@ -18,7 +23,7 @@
                     <div class="row-item" onclick="sortTable">Статистика</div>
                     <div class="row-item">Раунды</div>
                 </div>
-                {% for card in deck.sort_timestamp_by_user(current_user.id) %}
+                {% for card in deck.sort_percent_by_user(current_user.id) %}
                     <div class="table-row">
                         <div class="row-item">{{ card.chinese }}</div>
                         <div class="row-item">{{ card.transcription }}</div>

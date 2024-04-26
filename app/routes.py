@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from app import db
 from datetime import datetime
 from app.models import User, Deck, Card, CardPerformance, deck_cards, user_decks
+from chinese_tools import searchWord, decomposeWord
 from flask import jsonify, abort
 
 
@@ -17,19 +18,11 @@ from flask import jsonify, abort
 @app.route('/index')
 @login_required
 def index():
-    sorted_mydecks = Deck.query \
-        .join(user_decks) \
-        .filter(user_decks.c.user_id == current_user.id) \
-        .order_by(user_decks.c.timestamp.desc()) \
-        .limit(4) \
-        .all()
-
     perform = CardPerformance.query \
         .filter_by(user_id=current_user.id) \
         .order_by(CardPerformance.timestamp.desc()).limit(5).all()
-    return render_template("index.html", title='Home Page', decks=sorted_mydecks, perform=perform,
+    return render_template("index.html", title='Home Page', perform=perform,
                            now=datetime.utcnow())
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -70,22 +63,21 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/decks', methods=['GET', 'POST'])
-@login_required
-def my_decks():
-    sorted_mydecks = Deck.query \
-        .join(user_decks) \
-        .filter(user_decks.c.user_id == current_user.id) \
-        .order_by(user_decks.c.timestamp.desc()) \
-        .all()
-    form = DeckForm()
-    if form.validate_on_submit():
-        new_deck = Deck(name=form.name.data, creator=current_user)
-        db.session.add(new_deck)
-        db.session.commit()
-        flash("Deck was created")
-        return redirect('/decks')
-    return render_template("sets.html", title='My sets', decks=sorted_mydecks, form=form)
+@app.route('/user/<string:id_or_name>', methods=['GET', 'POST'])
+def userpage(id_or_name):
+    if id_or_name.isdigit():
+        user = User.query.get_or_404(id_or_name)
+        form = DeckForm()
+        if form.validate_on_submit():
+            new_deck = Deck(name=form.name.data, creator=current_user)
+            db.session.add(new_deck)
+            db.session.commit()
+            flash("Deck was created")
+            return redirect(f'/user/{user.id}')
+        return render_template("userpage.html", title=f"User {user.username}", user=user, form=form)
+    else:
+        user = User.query.filter_by(username=id_or_name).first()
+        return redirect(f'/user/{user.id}')
 
 
 @app.route('/deck/<int:id>')
@@ -103,8 +95,9 @@ def remove_deck(id):
         flash(f"Вы создатель колоды {deck_curr.name}. Удалить ее навсегда можно через меню изменить")
     else:
         current_user.decks.remove(deck_curr)
+        db.session.commit()
         flash(f"Колода {deck_curr.name} успешно удалена")
-    return redirect('/decks')
+    return redirect(f'/user/{current_user.id}')
 
 
 @app.route('/edit_deck/<int:id>', methods=['GET', 'POST'])
@@ -140,7 +133,7 @@ def edit_deck(id):
             db.session.delete(to_edit)
             db.session.commit()
             flash("Deck was deleted")
-            return redirect('/decks')
+            return redirect(f'/user/{current_user.id}')
         else:
             return "Action is not allowed"
     if form3.validate_on_submit():
@@ -237,11 +230,42 @@ def delete_card(id):
         return "Недостаточно прав"
     return redirect("/words")
 
+@app.route('/add_deck/<int:deck_id>')
+@login_required
+def add_deck(deck_id):
+    deck = Deck.query.get_or_404(deck_id)
+    if deck is None:
+        return "Deck is not found."
+    if deck in current_user.decks:
+        flash("Deck is already added")
+        return redirect(f'/deck/{deck_id}')
+    else:
+
+        deck.add_to_user(current_user)
+        db.session.commit()
+        flash("Deck successfully added")
+        return redirect(f'/deck/{deck_id}')
+
 
 @app.route('/words')
 @login_required
 def all_words():
     cards = Card.query.all()
+    return render_template("words.html", title="Все слова", words=cards)
+
+
+@app.route('/words/retry')
+@login_required
+def try_words():
+    cards = Card.query.all()
+    for card in cards:
+        if (card.translation == None or card.transcription == None):
+            try:
+                card.transcription, card.translation = searchWord(card.chinese)
+                db.session.commit()
+                flash(f"Заново поиск слова {card.chinese}, успех")
+            except Exception as e:
+                flash(f"Заново поиск слова {card.chinese}, {str(e)}")
     return render_template("words.html", title="Все слова", words=cards)
 
 
@@ -269,7 +293,7 @@ def api(type, deck_id, user_id):
         return jsonify(cards)
     if type == "deck_user_performance":
         deck = Deck.query.get_or_404(deck_id)
-        cards = [card.to_dict() for card in deck.sort_progress_by_user(user_id)]
+        cards = [card.to_dict() for card in deck.sort_perf_by_user(user_id)]
         return jsonify(cards)
 
 
@@ -286,7 +310,7 @@ def update_performance(action):
     if cardId is None:
         return jsonify({'error': 'Missing performance ID'})
 
-    performance = CardPerformance.query.filter_by(user_id = current_user.id, card_id = cardId).first()
+    performance = CardPerformance.query.filter_by(user_id=current_user.id, card_id=cardId).first()
     if performance is None:
         return jsonify({'error': 'Performance not found'})
         print(action)

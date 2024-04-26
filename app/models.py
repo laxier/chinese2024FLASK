@@ -31,6 +31,20 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def sort_user_decs(self):
+        query = Deck.query \
+            .join(user_decks) \
+            .filter(user_decks.c.user_id == self.id) \
+            .order_by(user_decks.c.timestamp.desc())
+        return query.all()
+
+    def sort_user_decs_four(self):
+        query = Deck.query \
+            .join(user_decks) \
+            .filter(user_decks.c.user_id == self.id) \
+            .order_by(user_decks.c.timestamp.desc())
+        return query.limit(4).all()
+
 
 childrens = db.Table(
     'childrens',
@@ -125,8 +139,8 @@ class Deck(db.Model):
     creator_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
     creator: so.Mapped[User] = so.relationship(back_populates="decks_created")
     users: so.Mapped[Set["User"]] = so.relationship('User', secondary='user_decks', back_populates='decks')
-    cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks')
-
+    cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks',
+                                                    order_by='deck_cards.c.timestamp')
     def __init__(self, name, creator):
         self.name = name
         self.creator = creator
@@ -137,20 +151,47 @@ class Deck(db.Model):
         return db.session.execute(query).one().timestamp
 
     def sort_timestamp_by_user(self, user_id):
-        query = db.session.query(Card).join(Card.card_performance).filter(CardPerformance.user_id == user_id,
-                                                                          CardPerformance.card_id.in_(
-                                                                              [card.id for card in
-                                                                               self.cards])).order_by(
-            CardPerformance.timestamp.desc())
-        return query.all()
+        query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
+        progress = db.session.execute(query).first()
+        if progress:
+            query = db.session.query(Card).join(Card.card_performance) \
+                .filter(CardPerformance.user_id == user_id,
+                        CardPerformance.card_id.in_([card.id for card in self.cards])) \
+                .order_by(CardPerformance.timestamp)
+            return query.all()
+        else:
+            return self.cards
 
-    def sort_progress_by_user(self, user_id):
-        query = db.session.query(Card).join(Card.card_performance).filter(CardPerformance.user_id == user_id,
-                                                                          CardPerformance.card_id.in_(
-                                                                              [card.id for card in
-                                                                               self.cards])).order_by(
-            CardPerformance.repetitions)
-        return query.all()
+    def sort_perf_by_user(self, user_id):
+        query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
+        progress = db.session.execute(query).first()
+        if progress:
+            query = db.session.query(Card).join(Card.card_performance) \
+                .filter(CardPerformance.user_id == user_id,
+                        CardPerformance.card_id.in_([card.id for card in self.cards])) \
+                .order_by(CardPerformance.wrong.desc())
+            return query.all()
+        else:
+            return self.cards
+
+    def sort_percent_by_user(self, user_id):
+        query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
+        progress = db.session.execute(query).first()
+        if progress:
+            query = db.session.query(Card).join(Card.card_performance) \
+                .filter(CardPerformance.user_id == user_id,
+                        CardPerformance.card_id.in_([card.id for card in self.cards]))
+            cards = query.all()
+            cards.sort(key=lambda card: (card.perf_by_user(user_id).accuracy_percentage,
+                                         -card.perf_by_user(user_id).wrong))
+            return cards
+        else:
+            return self.cards
+
+    def add_to_user(self, user):
+        user.decks.add(self)
+        for card in self.cards:
+            card.create_rel(user)
 
 
 user_decks = db.Table(
