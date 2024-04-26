@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-
 {% block content %}
     <main class="container">
-        <h1>Hi {{ current_user.username }}!</h1>
+        {% if current_user.is_authenticated %}
+            <h1>Hi, {{ current_user.username }}!</h1>
+        {% endif %}
         <h1>Список слов на сайте</h1>
         {% if words %}
             <div class="container">
@@ -11,12 +12,14 @@
                         <div class="row-item">Слово</div>
                         <div class="row-item">Произношение</div>
                         <div class="row-item">Перевод</div>
-                        <div class="row-item">Статистика</div>
-                        <div class="row-item">Раунды</div>
-                        <div class="row-item">Действия</div>
-                        {% if current_user.username == "admin" %}
-                            <div class="row-item">Администрирование</div>
-                            <div class="row-item">Администрирование</div>
+                        {% if current_user.is_authenticated %}
+                            <div class="row-item">Статистика</div>
+                            <div class="row-item">Раунды</div>
+                            <div class="row-item">Действия</div>
+                            {% if current_user.username == "admin" %}
+                                <div class="row-item">Администрирование</div>
+                                <div class="row-item">Администрирование</div>
+                            {% endif %}
                         {% endif %}
                     </div>
                     {% for card in words %}
@@ -24,17 +27,19 @@
                             <div class="row-item">{{ card.chinese }}</div>
                             <div class="row-item">{{ card.transcription }}</div>
                             <div class="row-item">{{ card.translation }}</div>
-                            {% if card.perf_by_user(current_user.id) %}
-                                <div class="row-item">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
-                                <div class="row-item">
-                                    <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
-                                       class="btn btn-outline-secondary">Обнулить</a>
-                                </div>
-                            {% else %}
-                                <div class="row-item">-</div>
-                                <div class="row-item">-</div>
-                                <div class="row-item">-</div>
+                            {% if current_user.is_authenticated %}
+                                {% if card.perf_by_user(current_user.id) %}
+                                    <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                    <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                                    <div class="row-item">
+                                        <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
+                                           class="btn btn-outline-secondary">Обнулить</a>
+                                    </div>
+                                {% else %}
+                                    <div class="row-item">-</div>
+                                    <div class="row-item">-</div>
+                                    <div class="row-item">-</div>
+                                {% endif %}
                             {% endif %}
                             {% if current_user.username == "admin" %}
                                 <div class="row-item">
@@ -53,3 +58,22 @@
         {% endif %}
     </main>
 {% endblock %}
+<script>
+    {% block scripts %}
+        window.addEventListener("load", function () {
+            console.log(document)
+            var accuracyCells = document.querySelectorAll('.percent');
+            console.log(accuracyCells)
+            accuracyCells.forEach(function (cell) {
+                var accuracy = parseInt(cell.textContent);
+                if (accuracy >= 80) {
+                    cell.classList.add('green');
+                } else if (accuracy >= 60) {
+                    cell.classList.add('yellow');
+                } else if (accuracy >= 20) {
+                    cell.classList.add('red')
+                }
+            });
+        });
+    {% endblock %}
+</script>

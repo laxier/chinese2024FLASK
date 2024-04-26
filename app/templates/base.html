@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     {% if title %}
@@ -160,6 +161,18 @@
         display: none;
     }
 
+    .green {
+        color: rgb(0, 128, 75);
+    }
+
+    .yellow {
+        color: rgb(229, 187, 16);
+    }
+
+    .red {
+        color: rgb(203, 65, 7);
+    }
+
     {% block styles %}
     {% endblock %}
 </style>
@@ -178,7 +191,9 @@
 
     <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
         <li><a href="/index" class="nav-link px-2 link-secondary">Дом</a></li>
-        <li><a href="/user/{{ current_user.id }}" class="nav-link px-2 link-dark">Мой профиль</a></li>
+        {% if current_user.is_authenticated %}
+            <li><a href="/user/{{ current_user.id }}" class="nav-link px-2 link-dark">Мой профиль</a></li>
+        {% endif %}
         <li><a href="/words" class="nav-link px-2 link-dark">Слова</a></li>
     </ul>
 

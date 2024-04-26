@@ -81,14 +81,6 @@ class Card(db.Model):
         except Exception as e:
             print(f"Failed to fetch data for character {chinese}: {str(e)}")
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'chinese': self.chinese,
-            'transcription': self.transcription,
-            'translation': self.translation
-        }
-
     def children_poisk(self):
         log = ""
         if len(self.chinese) > 1:

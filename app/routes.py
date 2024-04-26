@@ -24,6 +24,7 @@ def index():
     return render_template("index.html", title='Home Page', perform=perform,
                            now=datetime.utcnow())
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -81,9 +82,9 @@ def userpage(id_or_name):
 
 
 @app.route('/deck/<int:id>')
-@login_required
 def deck(id):
     deck_curr = Deck.query.get_or_404(id)
+    # дописать для анонимного пользователя
     return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
 
 
@@ -230,6 +231,7 @@ def delete_card(id):
         return "Недостаточно прав"
     return redirect("/words")
 
+
 @app.route('/add_deck/<int:deck_id>')
 @login_required
 def add_deck(deck_id):
@@ -248,7 +250,6 @@ def add_deck(deck_id):
 
 
 @app.route('/words')
-@login_required
 def all_words():
     cards = Card.query.all()
     return render_template("words.html", title="Все слова", words=cards)
@@ -303,25 +304,27 @@ def test(id):
     return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
 
 
-@app.route('/api/update-performance/<string:action>', methods=['POST'])
-def update_performance(action):
+@app.route('/api/update-performance', methods=['POST'])
+@login_required
+def update_performance():
     data = request.get_json()
-    cardId = data.get('id')
-    if cardId is None:
-        return jsonify({'error': 'Missing performance ID'})
-
-    performance = CardPerformance.query.filter_by(user_id=current_user.id, card_id=cardId).first()
+    char = data.get('char')
+    action = data.get('action')
+    if char is None:
+        return jsonify({'error': 'Missing character'})
+    if action is None:
+        return jsonify({'error': 'Missing action'})
+    performance = Card.query.filter_by(chinese=char).first().perf_by_user(user_id=current_user.id)
     if performance is None:
         return jsonify({'error': 'Performance not found'})
         print(action)
-
     if action == "correct":
         performance.correct()
         db.session.commit()
-        return jsonify({'message': 'Right repetition processed successfully'})
+        return jsonify({'message': '+1 repetition processed successfully'})
     if action == "incorrect":
         performance.incorrect()
         db.session.commit()
-        return jsonify({'message': 'Wrong repetition processed successfully'})
+        return jsonify({'message': '-1 repetition processed successfully'})
     else:
         return jsonify({'error': 'Unknown key'})
