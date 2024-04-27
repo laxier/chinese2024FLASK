@@ -2,7 +2,7 @@
 {% block content %}
     <main class="container">
         <h1>Deck {{ deck.name }}!</h1>
-        <h6>by {{ deck.creator.username }}</h6>
+        <h6>by <a href="/user/{{ deck.creator.id }}">{{ deck.creator.username }}</a></h6>
         <div class="container">
             {% if current_user.is_authenticated %}
                 {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
@@ -13,6 +13,8 @@
                 {% else %}
                     <a href="/add_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
                 {% endif %}
+            {% else %}
+                <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
             {% endif %}
         </div>
         {% if deck.cards %}

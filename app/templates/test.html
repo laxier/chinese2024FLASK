@@ -13,13 +13,13 @@
                     </div>
                     <div class="card-body">
                         <div class="front">
+                            <h6 id="back-pronunciation">mama</h6>
+                            <h6 class="card-title" id="back-translation">сущ. мама</h6>
+                        </div>
+                        <div class="back" style="display: none;">
                             <h5 id="front-character"
                                 style="font-family: KaiTi, STKaiti, DFKai-SB, BiauKai, Arial !important; font-size:80px;">
                                 妈妈</h5>
-                        </div>
-                        <div class="back" style="display: none;">
-                            <h6 id="back-pronunciation">mama</h6>
-                            <h6 class="card-title" id="back-translation">сущ. мама</h6>
                         </div>
                         <div class="button-container">
                             <button id="quiz-right" class="btn btn-outline-secondary">Верно</button>
@@ -51,7 +51,7 @@
                                 <div class="row-item chinese">{{ card.chinese }}</div>
                                 <div class="row-item transcript">{{ card.transcription }}</div>
                                 <div class="row-item translations">{{ card.translation }}</div>
-                                <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
                             </div>
                         {% endfor %}
                     {% else %}
@@ -117,10 +117,21 @@
                     progress_bar.style.width = `${progress}%`;
                     displayFlashcard(currentFlashcardIndex);
                 } else {
-                    alert("Вы достигли конца списка flashcards.");
-                    restartQuiz();
+                    progress += increment;
+                    progress_bar.style.width = `${progress}%`;
+
+                    function endQuiz() {
+                        alert("Больше нет слов, перезапускаю");
+                        restartQuiz();
+                        progress_bar.removeEventListener('transitionend', endQuiz);
+                    }
+
+                    progress_bar.addEventListener('transitionend', endQuiz);
                 }
             }
+
+            const restart = document.getElementById("quiz-restart")
+            restart.addEventListener('click', restartQuiz);
 
             function restartQuiz() {
                 currentFlashcardIndex = 0;
@@ -135,6 +146,10 @@
             function markCorrect() {
                 Rows[currentFlashcardIndex].style.color = 'green'
                 {% if current_user.is_authenticated %}
+                    let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
+                    cell_data[0]++;
+                    cell_data[1]++;
+                    Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
                     fetch('/api/update-performance', {
                         method: 'POST',
                         headers: {
@@ -164,6 +179,9 @@
             function markIncorrect() {
                 Rows[currentFlashcardIndex].style.color = 'red'
                 {% if current_user.is_authenticated %}
+                    let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
+                    cell_data[1]++;
+                    Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
                     fetch('/api/update-performance', {
                         method: 'POST',
                         headers: {
