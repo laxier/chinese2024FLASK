@@ -5,16 +5,16 @@
         <h1> Deck <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
         {% if log_table %}
             <div class="table-container">
-            <div class="table-row heading">
-                <div class="row-item">Слово</div>
-                <div class="row-item">Log</div>
-            </div>
-            {% for key, value in log_table.items() %}
-                <div class="table-row">
-                    <div class="row-item">{{ key }}</div>
-                    <div class="row-item">{{ value }}</div>
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Log</div>
                 </div>
-            {% endfor %}
+                {% for key, value in log_table.items() %}
+                    <div class="table-row">
+                        <div class="row-item">{{ key }}</div>
+                        <div class="row-item">{{ value }}</div>
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
         {% if deck.cards %}
@@ -30,12 +30,12 @@
                         <div class="row-item">Убрать</div>
                     {% endif %}
                 </div>
-                {% for card in deck.cards %}
+                {% for card in deck.sort_percent_by_user(current_user.id) %}
                     <div class="table-row">
                         <div class="row-item">{{ card.chinese }}</div>
                         <div class="row-item">{{ card.transcription }}</div>
                         <div class="row-item">{{ card.translation }}</div>
-                        <div class="row-item">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                        <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                         <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
                         <div class="row-item">
                             <a href="/perf_update/{{ deck.id }}/{{ card.perf_by_user(current_user.id).id }}/right"
@@ -127,4 +127,19 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script>
+        window.addEventListener("load", function () {
+            var accuracyCells = document.querySelectorAll('.percent');
+            accuracyCells.forEach(function (cell) {
+                var accuracy = parseInt(cell.textContent);
+                if (accuracy >= 80) {
+                    cell.classList.add('green');
+                } else if (accuracy >= 60) {
+                    cell.classList.add('yellow');
+                } else if (accuracy >= 20) {
+                    cell.classList.add('red')
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -4,10 +4,15 @@ from typing import Optional
 from datetime import datetime, timezone
 from typing import List, Set
 import sqlalchemy as sa
+from sqlalchemy import exc
 import sqlalchemy.orm as so
 from chinese_tools import searchWord, decomposeWord
 from app import db
 from app import login
+import queue
+
+# Создаем экземпляр очереди
+q_CHARACTERS = queue.Queue()
 
 
 class User(UserMixin, db.Model):
@@ -101,9 +106,17 @@ class Card(db.Model):
         else:
             query = sa.select(character).filter_by(chinese=self.chinese)
             new = db.session.scalar(query)
-            if not (new):
+            if new:
+                if new.children:
+                    log = f"{self.chinese}\n"
+                    for char in self.children:
+                        log += f"\n{char.chinese}"
+                        log += " связь уже существует"
+                    return log
+            else:
                 new = character(self.chinese)
                 db.session.add(new)
+                db.session.commit()
             return new.get_childs()
 
     def create_rel(self, user):
@@ -132,6 +145,7 @@ class Deck(db.Model):
     creator: so.Mapped[User] = so.relationship(back_populates="decks_created")
     users: so.Mapped[Set["User"]] = so.relationship('User', secondary='user_decks', back_populates='decks')
     cards: so.Mapped[Set["Card"]] = so.relationship('Card', secondary='deck_cards', back_populates='decks')
+
     def __init__(self, name, creator):
         self.name = name
         self.creator = creator
@@ -272,14 +286,30 @@ class character(db.Model):
                 log += f"\n{element}"
                 query = sa.select(character).filter_by(chinese=element)
                 element_card = db.session.scalar(query)
-                if element_card not in self.children:
-                    if not (element_card):
+                if element_card:
+                    if element_card not in self.children:
+                        self.children.add(element_card)
+                        db.session.commit()
+                        log += " связь добавлена"
+                    else:
+                        log += " связь уже существует"
+                else:
+                    try:
                         element_card = character(chinese=element)
                         db.session.add(element_card)
-                    self.children.add(element_card)
-                    log += " связь создана"
-                else:
-                    log += " связь уже существует"
+                        db.session.commit()
+                    except exc.IntegrityError:
+                        print("IntegrityError обработана")
+                        db.session.rollback()
+                        query = sa.select(character).filter_by(chinese=element)
+                        element_card = db.session.scalar(query)
+                        self.children.add(element_card)
+                        db.session.commit()
+                        log += " связь добавлена"
+                    finally:
+                        self.children.add(element_card)
+                        db.session.commit()
+                        log += " связь создана"
         return log
 
 
