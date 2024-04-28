@@ -306,7 +306,7 @@ class character(db.Model):
                         self.children.add(element_card)
                         db.session.commit()
                         log += " связь добавлена"
-                    finally:
+                    else:
                         self.children.add(element_card)
                         db.session.commit()
                         log += " связь создана"
