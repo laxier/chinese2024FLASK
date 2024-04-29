@@ -9,9 +9,9 @@ from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
 from datetime import datetime
-from app.models import User, Deck, Card, CardPerformance, deck_cards, user_decks
-from chinese_tools import searchWord, decomposeWord
-from flask import jsonify, abort
+from app.models import User, Deck, Card, CardPerformance
+from chinese_tools import searchWord
+from flask import jsonify
 
 
 @app.route('/')

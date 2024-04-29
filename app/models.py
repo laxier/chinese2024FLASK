@@ -2,18 +2,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from typing import Optional
 from datetime import datetime, timezone
-from typing import List, Set
+from typing import Set
 import sqlalchemy as sa
 from sqlalchemy import exc
 import sqlalchemy.orm as so
 from chinese_tools import searchWord, decomposeWord
 from app import db
 from app import login
-import queue
-
-# Создаем экземпляр очереди
-q_CHARACTERS = queue.Queue()
-
 
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -108,8 +103,8 @@ class Card(db.Model):
             new = db.session.scalar(query)
             if new:
                 if new.children:
-                    log = f"{self.chinese}\n"
-                    for char in self.children:
+                    log = f"{new.chinese}\n"
+                    for char in new.children:
                         log += f"\n{char.chinese}"
                         log += " связь уже существует"
                     return log
@@ -174,7 +169,7 @@ class Deck(db.Model):
             query = db.session.query(Card).join(Card.card_performance) \
                 .filter(CardPerformance.user_id == user_id,
                         CardPerformance.card_id.in_([card.id for card in self.cards])) \
-                .order_by(CardPerformance.wrong.desc())
+                .order_by(CardPerformance.wrong.desc(), CardPerformance.repetitions)
             return query.all()
         else:
             return self.cards
