@@ -23,7 +23,8 @@
                                 {% endif %}
                             </div>
                             <div class="card-footer text-muted">
-                                {{ moment(deck.timestamp_by_user(user.id)).format('lll') }}
+                                {{ moment(deck.timestamp_created(user.id)).format('L') }}
+                                {{ deck.percent_for_user(user.id)}}%
                             </div>
                         </div>
                         {% if loop.index is divisibleby 4 %}

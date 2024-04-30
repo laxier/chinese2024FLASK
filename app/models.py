@@ -10,6 +10,7 @@ from chinese_tools import searchWord, decomposeWord
 from app import db
 from app import login
 
+
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
@@ -42,7 +43,7 @@ class User(UserMixin, db.Model):
         query = Deck.query \
             .join(user_decks) \
             .filter(user_decks.c.user_id == self.id) \
-            .order_by(user_decks.c.timestamp.desc())
+            .order_by(user_decks.c.edited.desc())
         return query.limit(4).all()
 
 
@@ -146,9 +147,17 @@ class Deck(db.Model):
         self.creator = creator
         self.users.add(self.creator)
 
-    def timestamp_by_user(self, user_id):
+    def timestamp_created(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         return db.session.execute(query).one().timestamp
+
+    def percent_for_user(self, user_id):
+        query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
+        return db.session.execute(query).one().percent
+
+    def edited_by_user(self, user_id):
+        query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
+        return db.session.execute(query).one().edited
 
     def sort_timestamp_by_user(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
@@ -183,6 +192,7 @@ class Deck(db.Model):
                         CardPerformance.card_id.in_([card.id for card in self.cards]))
             cards = query.all()
             cards.sort(key=lambda card: (card.perf_by_user(user_id).accuracy_percentage,
+                                         card.perf_by_user(user_id).repetitions,
                                          -card.perf_by_user(user_id).wrong))
             return cards
         else:
@@ -198,7 +208,10 @@ user_decks = db.Table(
     'user_decks',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('deck_id', db.Integer, db.ForeignKey('deck.id')),
-    db.Column('timestamp', db.DateTime, default=lambda: datetime.now(timezone.utc))
+    db.Column('percent', db.Integer, default=0),
+    db.Column('timestamp', db.DateTime, default=lambda: datetime.now(timezone.utc)),
+    db.Column('edited', db.DateTime, default=lambda: datetime.now(timezone.utc),
+              onupdate=lambda: datetime.now(timezone.utc))
 )
 
 deck_cards = db.Table(

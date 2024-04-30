@@ -8,8 +8,8 @@ from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
-from datetime import datetime
-from app.models import User, Deck, Card, CardPerformance
+from datetime import datetime, timezone
+from app.models import User, Deck, Card, CardPerformance, user_decks
 from chinese_tools import searchWord
 from flask import jsonify
 
@@ -110,7 +110,7 @@ def edit_deck(id):
     form3 = AddForm()
     if form.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            card = Card.query.filter_by(chinese=form.char.data.replace(u"\u200b", "")).first()
+            card = Card.query.filter_by(chinese=form.char.data.replace(" ", "").replace(u"\u200b", "")).first()
             if card:
                 if card in to_edit.cards:
                     flash('Card already exists')
@@ -282,22 +282,6 @@ def get_childs(id, back):
         return "Недостаточно прав"
 
 
-@app.route('/api/<string:type>/<int:deck_id>/<int:user_id>')
-def api(type, deck_id, user_id):
-    if type == "deck":
-        deck = Deck.query.get_or_404(deck_id)
-        cards = [card.to_dict() for card in deck.sort_timestamp_by_user(user_id)]
-        return jsonify(cards)
-    if type == "deck_user_time":
-        deck = Deck.query.get_or_404(deck_id)
-        cards = [card.to_dict() for card in deck.sort_timestamp_by_user(user_id)]
-        return jsonify(cards)
-    if type == "deck_user_performance":
-        deck = Deck.query.get_or_404(deck_id)
-        cards = [card.to_dict() for card in deck.sort_perf_by_user(user_id)]
-        return jsonify(cards)
-
-
 @app.route('/test/<int:id>')
 def test(id):
     deck_curr = Deck.query.get_or_404(id)
@@ -328,3 +312,31 @@ def update_performance():
         return jsonify({'message': '-1 repetition processed successfully'})
     else:
         return jsonify({'error': 'Unknown key'})
+
+
+@app.route('/api/update-deck', methods=['POST'])
+@login_required
+def update_deck():
+    data = request.get_json()
+    percent = data.get('percent')
+    id = data.get('id')
+    if percent is None:
+        return jsonify({'error': 'Missing percent'})
+    if id is None:
+        return jsonify({'error': 'Missing id'})
+
+    # query = sa.select(user_decks).filter_by(user_id=current_user.id, deck_id=id)
+    # deck_user = db.session.execute(query).first()
+    # print(deck_user)
+    # # row["Object"].meta_value
+    # deck_user.percent = percent
+    # # deck_user.percent = percent
+    # # deck_user.edited = datetime.now(timezone.utc)
+    # deck_user.edited = datetime.now(timezone.utc)
+    # db.session.commit()
+
+    update_query = user_decks.update().values(percent=percent).where(
+        (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
+    db.session.execute(update_query)
+    db.session.commit()
+    return jsonify({'message': 'processed successfully'})

@@ -80,7 +80,8 @@
             const increment = 100 / Rows.length;
             let progress = 0;
             let currentFlashcardIndex = 0;
-            console.log(Rows)
+            let countRight = 0;
+
             displayFlashcard(currentFlashcardIndex);
 
             const flashcard = document.getElementById("flashcard");
@@ -121,7 +122,22 @@
                     progress_bar.style.width = `${progress}%`;
 
                     function endQuiz() {
-                        alert("Больше нет слов, перезапускаю");
+                        alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
+
+                        fetch('/api/update-deck', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                'percent': Math.round(countRight / Rows.length * 100),
+                                'id': {{ deck.id }},
+                            }),
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data);
+                            });
                         restartQuiz();
                         progress_bar.removeEventListener('transitionend', endQuiz);
                     }
@@ -136,6 +152,7 @@
             function restartQuiz() {
                 currentFlashcardIndex = 0;
                 progress = 0;
+                countRight = 0;
                 progress_bar.style.width = `${progress}%`;
                 displayFlashcard(currentFlashcardIndex);
             }
@@ -149,6 +166,7 @@
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
                     cell_data[0]++;
                     cell_data[1]++;
+                    countRight++;
                     Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
                     fetch('/api/update-performance', {
                         method: 'POST',
@@ -162,11 +180,8 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            console.log('Repetitions count updated successfully', data);
+                            console.log(data);
                             getNextFlashcard();
-                        })
-                        .catch(error => {
-                            console.error('Error updating repetitions count:', error);
                         });
                 {% else %}
                     getNextFlashcard();
@@ -197,9 +212,6 @@
                             console.log('Repetitions count updated successfully', data);
                             getNextFlashcard();
                         })
-                        .catch(error => {
-                            console.error('Error updating repetitions count:', error);
-                        });
                 {% else %}
                     getNextFlashcard();
                 {% endif %}

@@ -19,7 +19,8 @@
                                 {% endif %}
                             </div>
                             <div class="card-footer text-muted">
-                                {{ moment(deck.timestamp_by_user(current_user.id)).fromNow() }}
+                                {{ moment(deck.edited_by_user(current_user.id)).fromNow() }}
+                                {{ deck.percent_for_user(current_user.id)}}%
                             </div>
                         </div>
                     {% endfor %}
