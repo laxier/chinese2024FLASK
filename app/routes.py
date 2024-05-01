@@ -324,17 +324,6 @@ def update_deck():
         return jsonify({'error': 'Missing percent'})
     if id is None:
         return jsonify({'error': 'Missing id'})
-
-    # query = sa.select(user_decks).filter_by(user_id=current_user.id, deck_id=id)
-    # deck_user = db.session.execute(query).first()
-    # print(deck_user)
-    # # row["Object"].meta_value
-    # deck_user.percent = percent
-    # # deck_user.percent = percent
-    # # deck_user.edited = datetime.now(timezone.utc)
-    # deck_user.edited = datetime.now(timezone.utc)
-    # db.session.commit()
-
     update_query = user_decks.update().values(percent=percent).where(
         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
     db.session.execute(update_query)

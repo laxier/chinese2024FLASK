@@ -249,6 +249,7 @@ class CardPerformance(db.Model):
     def incorrect(self):
         self.repetitions += 1
         self.wrong += 1
+        self.timestamp = datetime.now(timezone.utc)
 
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'
