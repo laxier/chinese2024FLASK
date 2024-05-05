@@ -255,6 +255,17 @@ class CardPerformance(db.Model):
         return f'{self.right}/{self.repetitions}'
 
 
+class DeckPerformance(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
+    deck_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Deck.id), nullable=False)
+    percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
+    test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
+    wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
+    def __repr__(self):
+        return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
+
+
 character_rel = db.Table(
     'character_rel',
     db.Column('parent_id', sa.Integer, sa.ForeignKey('character.id'),

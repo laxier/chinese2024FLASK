@@ -9,10 +9,10 @@ from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
 from datetime import datetime, timezone
-from app.models import User, Deck, Card, CardPerformance, user_decks
+from app.models import User, Deck, Card, CardPerformance, user_decks, DeckPerformance
 from chinese_tools import searchWord
 from flask import jsonify
-
+import calendar
 
 @app.route('/')
 @app.route('/index')
@@ -131,6 +131,9 @@ def edit_deck(id):
 
     if form2.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
+            deckperf = DeckPerformance.query.filter_by(deck_id=to_edit.id).all()
+            for entry in deckperf:
+                db.session.delete(entry)
             db.session.delete(to_edit)
             db.session.commit()
             flash("Deck was deleted")
@@ -318,14 +321,42 @@ def update_performance():
 @login_required
 def update_deck():
     data = request.get_json()
-    percent = data.get('percent')
     id = data.get('id')
+    percent = data.get('percent')
+    incorrect = data.get('incorrect')
     if percent is None:
         return jsonify({'error': 'Missing percent'})
     if id is None:
         return jsonify({'error': 'Missing id'})
+    deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent, test_date=datetime.now(),
+                                wrong_answers=incorrect)
+    db.session.add(deck_perf)
     update_query = user_decks.update().values(percent=percent).where(
         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
     db.session.execute(update_query)
     db.session.commit()
     return jsonify({'message': 'processed successfully'})
+
+
+def format_date(date):
+    day = date.day
+    month = date.month
+    month_name = calendar.month_name[month]
+    formatted_date = f"{day} {month_name.lower()}"
+    return formatted_date
+
+
+@app.route('/get-performance-data/<deck_id>/<user_id>', methods=['GET'])
+def get_performance_data(deck_id, user_id):
+    data = DeckPerformance.query.filter_by(user_id=user_id, deck_id=deck_id).all()
+    performance_data = {
+        'dates': [format_date(row.test_date) for row in data],
+        'percentages': [row.percent_correct for row in data],
+        'wrongAnswers': [row.wrong_answers for row in data]
+    }
+    # print(performance_data)
+    return jsonify(performance_data)
+
+
+if __name__ == '__main__':
+    app.run()

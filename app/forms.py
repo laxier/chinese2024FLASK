@@ -6,6 +6,7 @@ from app import db
 from app.models import User
 from chinese_tools import has_chinese_char
 
+
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
@@ -34,27 +35,33 @@ class RegistrationForm(FlaskForm):
         if len(password.data) < 8:
             raise ValidationError('Your password should bot be less than 8 symbols')
 
+
 class DeckForm(FlaskForm):
     name = StringField('Deck name', validators=[DataRequired()])
     submit = SubmitField('Create')
 
+
 class CardForm(FlaskForm):
     char = StringField('Chinese character:', validators=[DataRequired()])
     submit = SubmitField('Add')
+
     def validate_char(self, char):
-        cleaned_text = char.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "")
-        if has_chinese_char(cleaned_text)==False:
+        cleaned_text = (char.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "")
+                        .replace(u"\u00A0", ""))
+        if has_chinese_char(cleaned_text) == False:
             raise ValidationError('Please enter a chinese character!')
+
 
 class DeleteForm(FlaskForm):
     assurance = BooleanField('Ты уверен?', validators=[DataRequired()])
     submit = SubmitField('Удалить')
 
+
 class AddForm(FlaskForm):
     text = TextAreaField('Введи слова с новой строки', validators=[DataRequired()])
     submit = SubmitField('Добавить')
-    def validate_text(self, text):
-        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "")
-        if has_chinese_char(cleaned_text)==False:
-            raise ValidationError('Please enter a chinese character!')
 
+    def validate_text(self, text):
+        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "").replace(u"\u00A0", "")
+        if has_chinese_char(cleaned_text) == False:
+            raise ValidationError('Please enter a chinese character!')

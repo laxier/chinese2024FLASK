@@ -81,6 +81,7 @@
             let progress = 0;
             let currentFlashcardIndex = 0;
             let countRight = 0;
+            let incorrects = "";
 
             displayFlashcard(currentFlashcardIndex);
 
@@ -132,6 +133,7 @@
                             body: JSON.stringify({
                                 'percent': Math.round(countRight / Rows.length * 100),
                                 'id': {{ deck.id }},
+                                'incorrect': incorrects,
                             }),
                         })
                             .then(response => response.json())
@@ -195,6 +197,7 @@
                 Rows[currentFlashcardIndex].style.color = 'red'
                 {% if current_user.is_authenticated %}
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
+                    incorrects += Rows[currentFlashcardIndex].querySelector('.chinese').textContent + ", "
                     cell_data[1]++;
                     Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
                     fetch('/api/update-performance', {

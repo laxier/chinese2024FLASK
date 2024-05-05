@@ -19,6 +19,12 @@
         </div>
         {% if deck.cards %}
             {% if current_user.is_authenticated %}
+                <div class="container">
+                    <div id="chart-container">
+                        <canvas id="myChart"></canvas>
+                    </div>
+                    <div id="info-container"></div>
+                </div>
                 <div class="table-container">
                     <div class="table-row heading">
                         <div class="row-item">Слово</div>
@@ -81,6 +87,52 @@
 
 {% if current_user.is_authenticated %}
     {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            window.addEventListener("load", function () {
+                fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const chartData = {
+                            labels: data.dates,
+                            datasets: [{
+                                label: 'Процент правильных ответов',
+                                data: data.percentages,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        };
+
+                        const ctx = document.getElementById('myChart').getContext('2d');
+                        const myChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: chartData,
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 110
+                                    }
+                                }
+                            }
+                        });
+
+                        document.getElementById('chart-container').style.display = 'block';
+
+                        myChart.canvas.addEventListener('click', function (event) {
+                            const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
+                            const firstPoint = activePoints[0];
+                            if (firstPoint) {
+                                const date = data.dates[firstPoint.index];
+                                const percentage = data.percentages[firstPoint.index];
+                                const wrongAnswers = data.wrongAnswers[firstPoint.index];
+                                document.getElementById('info-container').innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы: ${wrongAnswers}`;
+                            }
+                        });
+                    });
+            });
+        </script>
         <script>
             window.addEventListener("load", function () {
                 var accuracyCells = document.querySelectorAll('.percent');
