@@ -43,17 +43,28 @@ def sort_elements(element):
 
 def decomposeWord(char):
     start_time = time.time()
+    chrome_options = Options()
     options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--page-load-strategy=none")
-    options.add_argument('--ignore-certificate-errors-spki-list')
-    options.add_experimental_option(
+
+    chrome_options.add_argument("--page-load-strategy=none")
+    chrome_options.add_argument('--ignore-certificate-errors-spki-list')
+    chrome_options.add_experimental_option(
         "prefs", {
             # block image loading
             "profile.managed_default_content_settings.images": 2,
         }
     )
-    driver = webdriver.Chrome(options=options)
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+
+    # driver.get('https://www.google.com')
+    # screenshot = driver.save_screenshot('test.png')
+    # driver.quit()
+
+    driver = webdriver.Chrome(options=chrome_options)
+    print("driver opened")
     # print("opened character", char)
     # print(datetime.now())
     driver.get(f'https://www.mdbg.net/chinese/dictionary?cdqchc={char}')
@@ -88,6 +99,6 @@ def decomposeWord(char):
     ans = [element.text for element in child_elements]
     driver.quit()
     end_time = time.time()
-    print(f"Выволнено за {end_time - start_time} секунд")
+    print(f"Выполнено за {end_time - start_time} секунд")
     print(ans)
     return ans

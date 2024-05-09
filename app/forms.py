@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, widgets, SelectMultipleField
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Optional
 import sqlalchemy as sa
 from app import db
 from app.models import User
@@ -62,6 +62,22 @@ class AddForm(FlaskForm):
     submit = SubmitField('Добавить')
 
     def validate_text(self, text):
-        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "").replace(u"\u00A0", "")
+        cleaned_text = text.data.replace(" ", "").replace("\n", "").replace("\r", "").replace(u"\u200b", "").replace(
+            u"\u00A0", "")
         if has_chinese_char(cleaned_text) == False:
             raise ValidationError('Please enter a chinese character!')
+
+
+# class MultiCheckboxField(SelectMultipleField):
+#     widget = widgets.ListWidget(prefix_label=False)
+#     option_widget = widgets.CheckboxInput()
+
+
+class GraphemaForm(FlaskForm):
+    graphems = SelectMultipleField(
+        'Графемы:',
+        validators=[Optional()],
+        coerce=int,
+        widget=widgets.ListWidget(html_tag='ul', prefix_label=False),
+        option_widget=widgets.CheckboxInput())
+    submit = SubmitField('Добавить')

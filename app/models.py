@@ -98,22 +98,17 @@ class Card(db.Model):
                         log += " связь создана"
                     else:
                         log += " связь уже существует"
-            return log
+            return [1], log
         else:
             query = sa.select(character).filter_by(chinese=self.chinese)
             new = db.session.scalar(query)
             if new:
-                if new.children:
-                    log = f"{new.chinese}\n"
-                    for char in new.children:
-                        log += f"\n{char.chinese}"
-                        log += " связь уже существует"
-                    return log
+                log += new.chinese + " = "
+                for child in new.children:
+                    log += child.chinese
+                return [new, new.children], log
             else:
-                new = character(self.chinese)
-                db.session.add(new)
-                db.session.commit()
-            return new.get_childs()
+                return [0], "Данное слово не поддерживается"
 
     def create_rel(self, user):
         query = sa.select(CardPerformance).filter_by(card_id=self.id, user_id=user.id)
@@ -262,6 +257,7 @@ class DeckPerformance(db.Model):
     percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
     test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
     wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
+
     def __repr__(self):
         return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
 
@@ -292,15 +288,17 @@ class character(db.Model):
     def __init__(self, chinese):
         self.chinese = chinese
 
+    def __repr__(self):
+        return self.chinese
+
     def get_childs(self):
         try:
             words = decomposeWord(self.chinese)
+            # print(words)
         except Exception as e:
             print(str(e))
             return
-        print(words)
         log = f"{self.chinese}\n"
-
         for element in words[1::]:
             if element:
                 log += f"\n{element}"

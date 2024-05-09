@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 ENV DATABASE_URL="mysql://root:rootroot@host.docker.internal/blog"
+ENV PYTHONUTF8=1
 
 EXPOSE 5000
 

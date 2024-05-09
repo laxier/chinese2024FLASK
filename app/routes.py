@@ -2,17 +2,18 @@ from flask import render_template, flash, redirect, url_for
 from app import app
 from flask import request
 from flask_login import current_user, login_user
-from app.forms import LoginForm, RegistrationForm, DeckForm, CardForm, DeleteForm, AddForm
+from app.forms import LoginForm, RegistrationForm, DeckForm, CardForm, DeleteForm, AddForm, GraphemaForm
 from flask_login import logout_user
 from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
 from datetime import datetime, timezone
-from app.models import User, Deck, Card, CardPerformance, user_decks, DeckPerformance
+from app.models import User, Deck, Card, CardPerformance, user_decks, DeckPerformance, character
 from chinese_tools import searchWord
 from flask import jsonify
 import calendar
+
 
 @app.route('/')
 @app.route('/index')
@@ -110,7 +111,8 @@ def edit_deck(id):
     form3 = AddForm()
     if form.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            card = Card.query.filter_by(chinese=form.char.data.replace(" ", "").replace(u"\u200b", "")).first()
+            card = Card.query.filter_by(
+                chinese=form.char.data.replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "")).first()
             if card:
                 if card in to_edit.cards:
                     flash('Card already exists')
@@ -119,7 +121,7 @@ def edit_deck(id):
                     to_edit.cards.add(card)
                     flash('Card added')
             else:
-                card = Card(chinese=form.char.data.replace(u"\u200b", ""))
+                card = Card(chinese=form.char.data.replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", ""))
                 db.session.add(card)
                 card.create_rel(user=current_user)
                 to_edit.cards.add(card)
@@ -142,7 +144,7 @@ def edit_deck(id):
             return "Action is not allowed"
     if form3.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            words = form3.text.data.replace(" ", "").replace(u"\u200b", "").split("\r\n")
+            words = form3.text.data.replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "").split("\r\n")
             dictionary = dict()
             for word in words:
                 try:
@@ -226,10 +228,13 @@ def delete_card(id):
     if current_user.username == "admin":
         to_delete = Card.query.get_or_404(id)
         if to_delete:
+            parents_copy = set(to_delete.parent)
+            for card in parents_copy:
+                card.children.remove(to_delete)
             for performance in to_delete.card_performance:
                 db.session.delete(performance)
-        db.session.delete(to_delete)
-        db.session.commit()
+            db.session.delete(to_delete)
+            db.session.commit()
     else:
         return "Недостаточно прав"
     return redirect("/words")
@@ -273,16 +278,52 @@ def try_words():
     return render_template("words.html", title="Все слова", words=cards)
 
 
-@app.route('/<string:back>/get_childs/<int:id>')
+@app.route('/<string:back>/get_childs/<int:id>', methods=['GET', 'POST'])
 @login_required
 def get_childs(id, back):
     if current_user.username == "admin":
         card = Card.query.get_or_404(id)
-        flash(card.children_poisk())
-        db.session.commit()
-        return redirect(f"/{back}")
+        if len(card.chinese) == 1:
+            return redirect(url_for('get_radicals', back=back, id=id))
+        else:
+            children, log = card.children_poisk()
+            flash(log)
+            return redirect(f"/{back}")
     else:
         return "Недостаточно прав"
+
+
+@app.route('/<string:back>/get_radicals/<int:id>', methods=['GET', 'POST'])
+@login_required
+def get_radicals(id, back):
+    card = Card.query.get_or_404(id)
+    children, log = card.children_poisk()
+    if len(children) == 1:
+        flash("Данное слово не поддерживается")
+        return redirect(f"/{back}")
+    form = GraphemaForm()
+    form.graphems.choices = [(char.id, char.chinese) for char in children[1]]
+    if form.validate_on_submit():
+        log = f"{card.chinese}"
+        for char in form.graphems.data:
+            temp = character.query.get_or_404(char)
+            children = Card.query.filter_by(chinese=temp.chinese).first()
+            if children is None:
+                children = Card(chinese=temp.chinese)
+                db.session.add(children)
+                log += f"created {children.chinese} {children.translation}"
+                card.children.append(children)
+                db.session.commit()
+            else:
+                if children in card.children:
+                    log += f"already {children.chinese} {children.translation}"
+                else:
+                    card.children.append(children)
+                    db.session.commit()
+                    log += f"added {children.chinese} {children.translation}"
+        flash(log)
+        return redirect(f"/{back}")
+    return render_template("radicals.html", title=f"Word {card.chinese}", form=form)
 
 
 @app.route('/test/<int:id>')
@@ -354,7 +395,6 @@ def get_performance_data(deck_id, user_id):
         'percentages': [row.percent_correct for row in data],
         'wrongAnswers': [row.wrong_answers for row in data]
     }
-    # print(performance_data)
     return jsonify(performance_data)
 
 
