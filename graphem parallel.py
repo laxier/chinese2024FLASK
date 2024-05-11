@@ -1,7 +1,7 @@
 from app import app, db
 from app.models import Deck, character
 import threading
-
+# requires selenium==4.20.0
 MAX_THREADS = 10
 semaphore = threading.Semaphore(MAX_THREADS)
 
