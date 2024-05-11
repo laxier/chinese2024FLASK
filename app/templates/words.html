@@ -53,11 +53,11 @@
                         {% endif %}
                         {% if current_user.username == "admin" %}
                             <div class="row-item">
-                                <a href="{{ url_for('delete_card', id=card.id, search=request.args.get('search', '')) }}"
+                                <a href="{{ url_for('delete_card', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                    class="btn btn-primary">Удалить</a>
                             </div>
                             <div class="row-item">
-                                <a href="{{ url_for('get_childs', back='words', id=card.id, search=request.args.get('search', '')) }}"
+                                <a href="{{ url_for('get_childs', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                    class="btn btn-primary">Разложить</a>
                             </div>
                         {% endif %}
@@ -84,11 +84,11 @@
                                 {% endif %}
                                 {% if current_user.username == "admin" %}
                                     <div class="row-item">
-                                        <a href="{{ url_for('remove_child', back='words', card_id=child.id, parent_id = card.id, search=request.args.get('search', '')) }}"
+                                        <a href="{{ url_for('remove_child', back='words', card_id=child.id, parent_id = card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                            class="btn btn-primary">Убрать</a>
                                     </div>
                                     <div class="row-item">
-                                        <a href="{{ url_for('get_childs', back='words', id = child.id, search=request.args.get('search', '')) }}"
+                                        <a href="{{ url_for('get_childs', back='words', id = child.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                            class="btn btn-primary">Разложить</a>
                                     </div>
                                 {% endif %}

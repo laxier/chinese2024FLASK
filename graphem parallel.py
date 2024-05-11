@@ -2,7 +2,7 @@ from app import app, db
 from app.models import Deck, character
 import threading
 
-MAX_THREADS = 6
+MAX_THREADS = 10
 semaphore = threading.Semaphore(MAX_THREADS)
 
 
