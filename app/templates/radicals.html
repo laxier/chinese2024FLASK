@@ -4,7 +4,16 @@
         <form action="" method="post" novalidate>
             {{ form.hidden_tag() }}
             {{ form.graphems.label }}
-            {{ form.graphems }}
+            <br>
+            {% for choice in form.graphems.choices %}
+                <label>
+                    <input type="checkbox" name="graphems" value="{{ choice[0] }}"
+                           {% if choice[1] in selected_childs %}checked disabled{% endif %}>
+                    {{ choice[1] }}
+                </label>
+                <br>
+            {% endfor %}
+            {#            {{ form.graphems }}#}
             <p>
                 {% for error in form.graphems.errors %}
                     <span style="color: red;">[{{ error }}]</span>

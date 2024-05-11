@@ -4,55 +4,145 @@
         {% if current_user.is_authenticated %}
             <h1>Hi, {{ current_user.username }}!</h1>
         {% endif %}
-        <h1>Список слов на сайте</h1>
-        {% if words %}
-            <div class="container">
-                <div class="table-container">
-                    <div class="table-row heading">
-                        <div class="row-item">Слово</div>
-                        <div class="row-item">Произношение</div>
-                        <div class="row-item">Перевод</div>
-                        {% if current_user.is_authenticated %}
-                            <div class="row-item">Статистика</div>
-                            <div class="row-item">Раунды</div>
-                            <div class="row-item">Действия</div>
-                            {% if current_user.username == "admin" %}
-                                <div class="row-item">Администрирование</div>
-                                <div class="row-item">Администрирование</div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    {% for card in words %}
-                        <div class="table-row">
-                            <div class="row-item">{{ card.chinese }}</div>
-                            <div class="row-item">{{ card.transcription }}</div>
-                            <div class="row-item">{{ card.translation }}</div>
-                            {% if current_user.is_authenticated %}
-                                {% if card.perf_by_user(current_user.id) %}
-                                    <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                    <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
-                                    <div class="row-item">
-                                        <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
-                                           class="btn btn-outline-secondary">Обнулить</a>
-                                    </div>
-                                {% else %}
-                                    <div class="row-item">-</div>
-                                    <div class="row-item">-</div>
-                                    <div class="row-item">-</div>
-                                {% endif %}
-                            {% endif %}
-                            {% if current_user.username == "admin" %}
-                                <div class="row-item">
-                                    <a href="/delete_card/{{ card.id }}" class="btn btn-primary">Удалить</a>
-                                </div>
-                                <div class="row-item">
-                                    <a href="/words/get_childs/{{ card.id }}" class="btn btn-primary">Разложить</a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+        <h1>Список слов на сайте (Всего: {{ words.total }})</h1>
+        <form method="GET" action="{{ url_for('words') }}">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Поиск по иероглифу, переводу или пиньиню"
+                       value="{{ request.args.get('search', '') }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Поиск</button>
                 </div>
             </div>
+        </form>
+        {% if words.items %}
+            <div class="container">
+            <div class="table-container">
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Произношение</div>
+                    <div class="row-item">Перевод</div>
+                    {% if current_user.is_authenticated %}
+                        <div class="row-item">Статистика</div>
+                        <div class="row-item">Раунды</div>
+                        <div class="row-item">Действия</div>
+                        {% if current_user.username == "admin" %}
+                            <div class="row-item">Администрирование</div>
+                            <div class="row-item"></div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% for card in words %}
+                    <div class="table-row">
+                        <div class="row-item">{{ card.chinese }}</div>
+                        <div class="row-item">{{ card.transcription }}</div>
+                        <div class="row-item">{{ card.translation }}</div>
+                        {% if current_user.is_authenticated %}
+                            {% if card.perf_by_user(current_user.id) %}
+                                <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                                <div class="row-item">
+                                    <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
+                                       class="btn btn-outline-secondary">Обнулить</a>
+                                </div>
+                            {% else %}
+                                <div class="row-item">-</div>
+                                <div class="row-item">-</div>
+                                <div class="row-item">-</div>
+                            {% endif %}
+                        {% endif %}
+                        {% if current_user.username == "admin" %}
+                            <div class="row-item">
+                                <a href="{{ url_for('delete_card', id=card.id, search=request.args.get('search', '')) }}"
+                                   class="btn btn-primary">Удалить</a>
+                            </div>
+                            <div class="row-item">
+                                <a href="{{ url_for('get_childs', back='words', id=card.id, search=request.args.get('search', '')) }}"
+                                   class="btn btn-primary">Разложить</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if card.children %}
+                        {% for child in card.children.order_by() %}
+                            <div class="table-row">
+                                <div class="row-item">--></div>
+                                <div class="row-item">{{ child.chinese }} {{ child.transcription }}</div>
+                                <div class="row-item">{{ child.translation }}</div>
+                                {% if current_user.is_authenticated %}
+                                    {% if child.perf_by_user(current_user.id) %}
+                                        <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                        <div class="row-item">{{ child.perf_by_user(current_user.id) }}</div>
+                                        <div class="row-item">
+                                            <a href="/words/null/{{ child.perf_by_user(current_user.id).id }}"
+                                               class="btn btn-outline-secondary">Обнулить</a>
+                                        </div>
+                                    {% else %}
+                                        <div class="row-item">-</div>
+                                        <div class="row-item">-</div>
+                                        <div class="row-item">-</div>
+                                    {% endif %}
+                                {% endif %}
+                                {% if current_user.username == "admin" %}
+                                    <div class="row-item">
+                                        <a href="{{ url_for('remove_child', back='words', card_id=child.id, parent_id = card.id, search=request.args.get('search', '')) }}"
+                                           class="btn btn-primary">Убрать</a>
+                                    </div>
+                                    <div class="row-item">
+                                        <a href="{{ url_for('get_childs', back='words', id = child.id, search=request.args.get('search', '')) }}"
+                                           class="btn btn-primary">Разложить</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% if words.pages > 1 %}
+                <div class="pagination-container">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {% if words.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for('words', page=words.prev_num) }}">&laquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            {% endif %}
+                            {% for page_num in words.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != words.page %}
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                               href="{{ url_for('words', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&hellip;</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if words.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for('words', page=words.next_num) }}">&raquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
         {% else %}
             <p>Пока нет изученных слов</p>
         {% endif %}

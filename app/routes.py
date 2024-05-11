@@ -235,9 +235,10 @@ def delete_card(id):
                 db.session.delete(performance)
             db.session.delete(to_delete)
             db.session.commit()
+        search_query = request.args.get('search', '')
+        return redirect(url_for('words', search=search_query))
     else:
         return "Недостаточно прав"
-    return redirect("/words")
 
 
 @app.route('/add_deck/<int:deck_id>')
@@ -258,10 +259,30 @@ def add_deck(deck_id):
 
 
 @app.route('/words')
-def all_words():
-    cards = Card.query.all()
-    return render_template("words.html", title="Все слова", words=cards)
+def words():
+    page = request.args.get('page', 1, type=int)
+    words_per_page = 20
+    search = request.args.get('search', '').strip()
+    if search:
+        words = Card.query.filter(
+            Card.chinese.ilike(f'%{search}%') |
+            Card.translation.ilike(f'%{search}%') |
+            Card.transcription.ilike(f'%{search}%')
+        ).paginate(page=page, per_page=words_per_page, error_out=False)
+    else:
+        words = Card.query.paginate(page=page, per_page=words_per_page, error_out=False)
+    return render_template('words.html', words=words, search=search)
 
+@app.route("/<string:back>/remove_child/<int:card_id>/<int:parent_id>")
+def remove_child(back, card_id, parent_id):
+    card = Card.query.get_or_404(card_id)
+    parent = Card.query.get_or_404(parent_id)
+    parent.children.remove(card)
+    db.session.commit()
+    flash("Card successfully removed")
+    search_query = request.args.get('search', '')
+    redirect_url = url_for('words', back=back, search=search_query)
+    return redirect(redirect_url)
 
 @app.route('/words/retry')
 @login_required
@@ -284,14 +305,18 @@ def get_childs(id, back):
     if current_user.username == "admin":
         card = Card.query.get_or_404(id)
         if len(card.chinese) == 1:
-            return redirect(url_for('get_radicals', back=back, id=id))
+            search_query = request.args.get('search', '')
+            redirect_url = url_for('get_radicals', back=back, id=id, search=search_query)
+            return redirect(redirect_url)
         else:
             children, log = card.children_poisk()
+            db.session.commit()
             flash(log)
-            return redirect(f"/{back}")
+            search_query = request.args.get('search', '')
+            redirect_url = url_for(back, search=search_query)
+            return redirect(redirect_url)
     else:
         return "Недостаточно прав"
-
 
 @app.route('/<string:back>/get_radicals/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -300,9 +325,13 @@ def get_radicals(id, back):
     children, log = card.children_poisk()
     if len(children) == 1:
         flash("Данное слово не поддерживается")
-        return redirect(f"/{back}")
+        search_query = request.args.get('search', '')
+        redirect_url = url_for(back, search=search_query)
+        return redirect(redirect_url)
     form = GraphemaForm()
     form.graphems.choices = [(char.id, char.chinese) for char in children[1]]
+    selected_childs = [child.chinese for child in card.children]
+
     if form.validate_on_submit():
         log = f"{card.chinese}"
         for char in form.graphems.data:
@@ -322,8 +351,10 @@ def get_radicals(id, back):
                     db.session.commit()
                     log += f"added {children.chinese} {children.translation}"
         flash(log)
-        return redirect(f"/{back}")
-    return render_template("radicals.html", title=f"Word {card.chinese}", form=form)
+        search_query = request.args.get('search', '')
+        redirect_url = url_for(back, search=search_query)
+        return redirect(redirect_url)
+    return render_template("radicals.html", title=f"Word {card.chinese}", form=form, selected_childs=selected_childs)
 
 
 @app.route('/test/<int:id>')
