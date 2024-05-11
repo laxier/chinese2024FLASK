@@ -1,3 +1,5 @@
+#Hyper-V containers have direct access to the Windows file system through a virtual hard disk (VHDX), which can lead to better file system performance compared to WSL. If your application involves frequent file I/O operations, Hyper-V containers may perform better.
+
 FROM python:3.12
 
 WORKDIR /app
