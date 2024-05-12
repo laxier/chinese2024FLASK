@@ -89,6 +89,7 @@
     {% block scripts %}
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
+            let myChart;
             window.addEventListener("load", function () {
                 fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
                     .then(response => response.json())
@@ -103,35 +104,69 @@
                                 borderWidth: 1
                             }]
                         };
-
+                        const body = document.body;
+                        const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
                         const ctx = document.getElementById('myChart').getContext('2d');
-                        const myChart = new Chart(ctx, {
+                        myChart = new Chart(ctx, {
                             type: 'bar',
                             data: chartData,
                             options: {
+                                maxBarThickness: 30,
                                 scales: {
+                                    x: {
+                                        grid: {
+                                            color: gridColor
+                                        }
+                                    },
                                     y: {
+                                        grid: {
+                                            color: gridColor
+                                        },
                                         beginAtZero: true,
                                         max: 110
                                     }
                                 }
                             }
                         });
-
                         document.getElementById('chart-container').style.display = 'block';
 
                         myChart.canvas.addEventListener('click', function (event) {
                             const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
                             const firstPoint = activePoints[0];
                             if (firstPoint) {
+                                const id = data.id[firstPoint.index];
                                 const date = data.dates[firstPoint.index];
                                 const percentage = data.percentages[firstPoint.index];
                                 const wrongAnswers = data.wrongAnswers[firstPoint.index];
-                                document.getElementById('info-container').innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы: ${wrongAnswers}`;
+                                const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
+                                const infoContainer = document.getElementById('info-container');
+                                infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы: ${wrongAnswers} <br> <a href="${deleteUrl}">Удалить</a>`;
                             }
                         });
                     });
             });
+            var themeSwitch = document.querySelector('[data-theme-toggle]');
+            if (themeSwitch) {
+                themeSwitch.addEventListener('change', function () {
+                    toggleThemeGraph();
+                });
+            }
+
+            function updateChartGridColor(color) {
+                myChart.options.scales.x.grid.color = color;
+                myChart.options.scales.y.grid.color = color;
+                myChart.update();
+            }
+
+            function toggleThemeGraph() {
+                const body = document.body;
+                const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                if (body.classList.contains('light-theme')) {
+                    updateChartGridColor(gridColor);
+                } else {
+                    updateChartGridColor(gridColor);
+                }
+            }
         </script>
         <script>
             window.addEventListener("load", function () {

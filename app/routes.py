@@ -219,7 +219,9 @@ def obnulit(id, back):
         db.session.commit()
     else:
         return "Error"
-    return redirect(f"/{back}")
+    search_query = request.args.get('search', '')
+    page_query = request.args.get('page', 1, type=int)
+    return redirect(url_for(back, search=search_query, page=page_query))
 
 
 @app.route('/delete_card/<int:id>')
@@ -424,11 +426,24 @@ def format_date(date):
 def get_performance_data(deck_id, user_id):
     data = DeckPerformance.query.filter_by(user_id=user_id, deck_id=deck_id).all()
     performance_data = {
+        'id' : [row.id for row in data],
         'dates': [format_date(row.test_date) for row in data],
         'percentages': [row.percent_correct for row in data],
         'wrongAnswers': [row.wrong_answers for row in data]
     }
     return jsonify(performance_data)
+
+@app.route('/delete-deck-perf/<perf_id>/<deck_id>', methods=['GET'])
+def delete_deck_perf(perf_id, deck_id):
+    perf = DeckPerformance.query.get_or_404(perf_id)
+    if perf is not None:
+        db.session.delete(perf)
+        db.session.commit()
+        flash("message: deleted")
+    else:
+        flash("message: no such perf")
+    redirect_url = url_for("deck", id=deck_id)
+    return redirect(redirect_url)
 
 
 if __name__ == '__main__':

@@ -68,8 +68,7 @@
 
     .row-item:hover,
     .card:hover,
-    .card:last-child:hover,
-    {
+    .card:last-child:hover {
         cursor: pointer;
         background-color: #F0F0F0;
     }
@@ -101,8 +100,7 @@
     {#    cursor: pointer;#}
     {#    background-color: #F0F0F0;#}
     {#box-shadow: 0px 1px 4px rgba(0, 0, 0, .08); #}
-    {
-    #}#}
+    {#{#}
 
     .row-sub-container {
         display: flex;
@@ -414,7 +412,7 @@
     </ul>
     <div class="col-md-3 text-end" style="display: flex; flex-direction: row; align-items: center;">
         <div class="form-check form-switch" style="padding-right: 1em;">
-            <input class="form-check-input" type="checkbox" id="darkSwitch" onchange="toggleTheme()">
+            <input class="form-check-input" type="checkbox" id="darkSwitch" onchange="toggleTheme()" data-theme-toggle>
             <label class="form-check-label" for="darkSwitch">Темная тема</label>
         </div>
         {% if current_user.is_anonymous %}
@@ -458,7 +456,6 @@
     function toggleTheme() {
         const body = document.body;
         const checkbox = document.getElementById('darkSwitch');
-
         if (body.classList.contains('dark-theme')) {
             body.classList.remove('dark-theme');
             sessionStorage.setItem('theme', 'light');

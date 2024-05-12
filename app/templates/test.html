@@ -84,7 +84,7 @@
             let incorrects = "";
 
             displayFlashcard(currentFlashcardIndex);
-
+            let isQuizEnding = false;
             const flashcard = document.getElementById("flashcard");
 
             flashcard.addEventListener("click", function (event) {
@@ -118,30 +118,32 @@
                     progress += increment;
                     progress_bar.style.width = `${progress}%`;
                     displayFlashcard(currentFlashcardIndex);
-                } else {
+                } else if (!isQuizEnding) {
+                    isQuizEnding = true;
                     progress += increment;
                     progress_bar.style.width = `${progress}%`;
-
                     function endQuiz() {
                         alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
-
-                        fetch('/api/update-deck', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                'percent': Math.round(countRight / Rows.length * 100),
-                                'id': {{ deck.id }},
-                                'incorrect': incorrects,
-                            }),
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log(data);
-                            });
+                        {% if deck in current_user.decks %}
+                            fetch('/api/update-deck', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    'percent': Math.min(100,Math.round(countRight / Rows.length * 100)),
+                                    'id': {{ deck.id }},
+                                    'incorrect': incorrects,
+                                }),
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data);
+                                });
+                        {% endif %}
                         restartQuiz();
                         progress_bar.removeEventListener('transitionend', endQuiz);
+                        isQuizEnding = false;
                     }
 
                     progress_bar.addEventListener('transitionend', endQuiz);
@@ -164,7 +166,7 @@
 
             function markCorrect() {
                 Rows[currentFlashcardIndex].style.color = 'green'
-                {% if current_user.is_authenticated %}
+                {% if deck in current_user.decks %}
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
                     cell_data[0]++;
                     cell_data[1]++;
@@ -186,6 +188,7 @@
                             getNextFlashcard();
                         });
                 {% else %}
+                    countRight++;
                     getNextFlashcard();
                 {% endif %}
             }
@@ -195,7 +198,7 @@
 
             function markIncorrect() {
                 Rows[currentFlashcardIndex].style.color = 'red'
-                {% if current_user.is_authenticated %}
+                {% if deck in current_user.decks %}
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
                     incorrects += Rows[currentFlashcardIndex].querySelector('.chinese').textContent + ", "
                     cell_data[1]++;

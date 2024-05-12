@@ -42,7 +42,7 @@
                                 <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                                 <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
                                 <div class="row-item">
-                                    <a href="/words/null/{{ card.perf_by_user(current_user.id).id }}"
+                                    <a href="{{url_for('obnulit', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', ''))}}"
                                        class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% else %}
