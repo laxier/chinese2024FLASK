@@ -292,12 +292,9 @@ class character(db.Model):
         return self.chinese
 
     def get_childs(self):
-        try:
-            words = decomposeWord(self.chinese)
-            # print(words)
-        except Exception as e:
-            print(str(e))
-            return
+        words = decomposeWord(self.chinese)
+        if words==[]:
+            return "Error happened"
         log = f"{self.chinese}\n"
         for element in words[1::]:
             if element:
