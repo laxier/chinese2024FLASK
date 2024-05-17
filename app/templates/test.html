@@ -47,7 +47,7 @@
                     </div>
                     {% if current_user.is_authenticated %}
                         {% for card in deck.sort_perf_by_user(current_user.id) %}
-                            <div class="table-row">
+                            <div class="table-row" card-id="{{ card.id }}">
                                 <div class="row-item chinese">{{ card.chinese }}</div>
                                 <div class="row-item transcript">{{ card.transcription }}</div>
                                 <div class="row-item translations">{{ card.translation }}</div>
@@ -81,7 +81,7 @@
             let progress = 0;
             let currentFlashcardIndex = 0;
             let countRight = 0;
-            let incorrects = "";
+            let incorrects = [];
 
             displayFlashcard(currentFlashcardIndex);
             let isQuizEnding = false;
@@ -125,6 +125,7 @@
                     function endQuiz() {
                         alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
                         {% if deck in current_user.decks %}
+                            console.log(incorrects)
                             fetch('/api/update-deck', {
                                 method: 'POST',
                                 headers: {
@@ -165,7 +166,7 @@
             correct.addEventListener('click', markCorrect);
 
             function markCorrect() {
-                Rows[currentFlashcardIndex].style.color = 'green'
+                Rows[currentFlashcardIndex].classList.add("green");
                 {% if deck in current_user.decks %}
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
                     cell_data[0]++;
@@ -197,10 +198,12 @@
             incorrect.addEventListener('click', markIncorrect);
 
             function markIncorrect() {
-                Rows[currentFlashcardIndex].style.color = 'red'
+                Rows[currentFlashcardIndex].classList.add("red");
                 {% if deck in current_user.decks %}
                     let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
-                    incorrects += Rows[currentFlashcardIndex].querySelector('.chinese').textContent + ", "
+                    let cardText = Rows[currentFlashcardIndex].querySelector('.chinese').textContent;
+                    incorrects.push(cardText);
+                    {#incorrects += Rows[currentFlashcardIndex].querySelector('.chinese').textContent + ", "#}
                     cell_data[1]++;
                     Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
                     fetch('/api/update-performance', {

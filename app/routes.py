@@ -399,7 +399,8 @@ def update_deck():
     data = request.get_json()
     id = data.get('id')
     percent = data.get('percent')
-    incorrect = data.get('incorrect')
+    incorrect = data.get('incorrect', [])
+    incorrect = ', '.join(str(card_id) for card_id in incorrect)
     if percent is None:
         return jsonify({'error': 'Missing percent'})
     if id is None:

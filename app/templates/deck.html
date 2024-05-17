@@ -34,23 +34,48 @@
                         <div class="row-item">Раунды</div>
                     </div>
                     {% for card in deck.sort_percent_by_user(current_user.id) %}
-                        <div class="table-row">
-                            <div class="row-item">{{ card.chinese }}</div>
+                        <div class="table-row parent">
+                            <div class="row-item">
+                                {% if card.children.count() > 0 %}
+                                    <button class="toggle-children">↓</button>
+                                {% endif %}
+                                {{ card.chinese }}
+                            </div>
                             <div class="row-item">{{ card.transcription }}</div>
                             <div class="row-item">{{ card.translation }}</div>
                             <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                             <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
                         </div>
-                        {% if card.children %}
-                            {% for child in card.children.order_by() %}
-                                <div class="table-row">
-                                    <div class="row-item">--></div>
-                                    <div class="row-item">{{ child.chinese }} {{ child.transcription }}</div>
-                                    <div class="row-item">{{ child.translation }}</div>
-                                    <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                    <div class="row-item"></div>
-                                </div>
-                            {% endfor %}
+                        {% if card.children.count() > 0 %}
+                            <div class="children" style="display: none;">
+                                {% for child in card.children.order_by() %}
+                                    <div class="table-row">
+                                        <div class="row-item">--></div>
+                                        <div class="row-item">
+                                            {% if child.children.count() > 0 %}
+                                                <button class="toggle-children">↓</button>
+                                            {% endif %}
+                                            {{ child.chinese }} {{ child.transcription }}
+                                        </div>
+                                        <div class="row-item">{{ child.translation }}</div>
+                                        <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                        <div class="row-item"></div>
+                                    </div>
+                                    {% if card.children.count() > 0 %}
+                                        <div class="children2" style="display: none;">
+                                            {% for child2 in child.children.order_by() %}
+                                                <div class="table-row">
+                                                    <div class="row-item">--></div>
+                                                    <div class="row-item">{{ child2.chinese }} {{ child2.transcription }}</div>
+                                                    <div class="row-item">{{ child2.translation }}</div>
+                                                    <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                                    <div class="row-item"></div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -62,19 +87,42 @@
                         <div class="row-item">Перевод</div>
                     </div>
                     {% for card in deck.cards %}
-                        <div class="table-row">
-                            <div class="row-item">{{ card.chinese }}</div>
+                        <div class="table-row parent">
+                            <div class="row-item">
+                                {% if card.children.count() > 0 %}
+                                    <button class="toggle-children">↓</button>
+                                {% endif %}
+                                {{ card.chinese }}
+                            </div>
                             <div class="row-item">{{ card.transcription }}</div>
                             <div class="row-item">{{ card.translation }}</div>
                         </div>
-                        {% if card.children %}
-                            {% for child in card.children.order_by() %}
-                                <div class="table-row">
-                                    <div class="row-item">--></div>
-                                    <div class="row-item">{{ child.chinese }} {{ child.transcription }}</div>
-                                    <div class="row-item">{{ child.translation }}</div>
-                                </div>
-                            {% endfor %}
+                        {% if card.children.count() > 0 %}
+                            <div class="children" style="display: none;">
+                                {% for child in card.children.order_by() %}
+                                    <div class="table-row">
+                                        <div class="row-item">--></div>
+                                        <div class="row-item">
+                                            {% if child.children.count() > 0 %}
+                                                <button class="toggle-children">↓</button>
+                                            {% endif %}
+                                            {{ child.chinese }} {{ child.transcription }}
+                                        </div>
+                                        <div class="row-item">{{ child.translation }}</div>
+                                    </div>
+                                    {% if child.children.count() > 0 %}
+                                        <div class="children2" style="display: none;">
+                                            {% for child2 in child.children.order_by() %}
+                                                <div class="table-row">
+                                                    <div class="row-item">--></div>
+                                                    <div class="row-item">{{ child2.chinese }} {{ child2.transcription }}</div>
+                                                    <div class="row-item">{{ child2.translation }}</div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -82,12 +130,44 @@
         {% else %}
             <p>no cards yet</p>
         {% endif %}
+
+
+        <div class="modal fade" id="modal">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Stroke order</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body"></div>
+                </div>
+            </div>
+        </div>
     </main>
 {% endblock %}
 
-{% if current_user.is_authenticated %}
-    {% block scripts %}
+{% block scripts %}
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            const toggleButtons = document.querySelectorAll('.toggle-children');
+            console.log(toggleButtons)
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const parent = button.parentElement.parentElement;
+                    const children = parent.nextElementSibling;
+                    children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                    button.textContent = children.style.display === 'none' ? '↓' : '↑'
+                });
+            });
+        })
+    </script>
+
+    {% if current_user.is_authenticated %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
         <script>
             let myChart;
             window.addEventListener("load", function () {
@@ -111,6 +191,7 @@
                             type: 'bar',
                             data: chartData,
                             options: {
+                                minBarLength: 5,
                                 maxBarThickness: 30,
                                 scales: {
                                     x: {
@@ -123,7 +204,8 @@
                                             color: gridColor
                                         },
                                         beginAtZero: true,
-                                        max: 110
+                                        max: Math.max(100, ...data.percentages) + 10,
+                                        {#max: 110#}
                                     }
                                 }
                             }
@@ -140,11 +222,58 @@
                                 const wrongAnswers = data.wrongAnswers[firstPoint.index];
                                 const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
                                 const infoContainer = document.getElementById('info-container');
-                                infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы: ${wrongAnswers} <br> <a href="${deleteUrl}">Удалить</a>`;
+                                infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы:`;
+
+                                // Отображение модального окна при нажатии на неправильный ответ
+                                const answersArray = wrongAnswers.split(', ');
+                                answersArray.forEach(answer => {
+                                    const answerElement = document.createElement('a');
+                                    answerElement.textContent = answer;
+                                    answerElement.classList.add('answer-link');
+                                    answerElement.addEventListener('click', () => showModal(answer));
+                                    infoContainer.appendChild(answerElement);
+                                    infoContainer.appendChild(document.createTextNode(', '));
+                                });
+                                const brElement = document.createElement('br');
+                                const deleteLink = document.createElement('a');
+                                deleteLink.href = deleteUrl;
+                                deleteLink.textContent = 'Удалить';
+                                infoContainer.appendChild(brElement);
+                                infoContainer.appendChild(deleteLink);
                             }
                         });
                     });
             });
+
+            function showModal(answer) {
+                var modalBody = document.querySelector('.modal-body');
+                modalBody.style.display = 'flex';
+                modalBody.style.flexDirection = 'row';
+                modalBody.style.flexWrap = 'nowrap';
+                modalBody.style.justifyContent = 'center';
+
+                modalBody.innerHTML = '';
+
+                var answers = answer.split('');
+                answers.forEach(function (char, index) {
+                    var charTargetId = 'character-target-' + (index + 1);
+                    var charDiv = document.createElement('div');
+                    charDiv.id = charTargetId;
+                    charDiv.style.width = '100px';
+                    charDiv.style.height = '100px';
+                    modalBody.appendChild(charDiv);
+                    var writer = HanziWriter.create(charTargetId, char, {
+                        width: 100,
+                        height: 100,
+                        padding: 5,
+                        showCharacter: false
+                    });
+                });
+                $('#modal').modal('show');
+
+            }
+
+
             var themeSwitch = document.querySelector('[data-theme-toggle]');
             if (themeSwitch) {
                 themeSwitch.addEventListener('change', function () {
@@ -183,5 +312,5 @@
                 });
             });
         </script>
-    {% endblock %}
-{% endif %}
+    {% endif %}
+{% endblock %}

@@ -34,7 +34,12 @@
                 </div>
                 {% for card in words %}
                     <div class="table-row">
-                        <div class="row-item">{{ card.chinese }}</div>
+                        <div class="row-item">
+                            {% if card.children.count() > 0 %}
+                                <button class="toggle-children">↓</button>
+                            {% endif %}
+                            {{ card.chinese }}
+                        </div>
                         <div class="row-item">{{ card.transcription }}</div>
                         <div class="row-item">{{ card.translation }}</div>
                         {% if current_user.is_authenticated %}
@@ -42,7 +47,7 @@
                                 <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                                 <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
                                 <div class="row-item">
-                                    <a href="{{url_for('obnulit', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', ''))}}"
+                                    <a href="{{ url_for('obnulit', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                        class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% else %}
@@ -62,40 +67,85 @@
                             </div>
                         {% endif %}
                     </div>
-                    {% if card.children %}
-                        {% for child in card.children.order_by() %}
-                            <div class="table-row">
-                                <div class="row-item">--></div>
-                                <div class="row-item">{{ child.chinese }} {{ child.transcription }}</div>
-                                <div class="row-item">{{ child.translation }}</div>
-                                {% if current_user.is_authenticated %}
-                                    {% if child.perf_by_user(current_user.id) %}
-                                        <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                        <div class="row-item">{{ child.perf_by_user(current_user.id) }}</div>
-                                        <div class="row-item">
-                                            <a href="/words/null/{{ child.perf_by_user(current_user.id).id }}"
-                                               class="btn btn-outline-secondary">Обнулить</a>
-                                        </div>
-                                    {% else %}
-                                        <div class="row-item">-</div>
-                                        <div class="row-item">-</div>
-                                        <div class="row-item">-</div>
+                    {% if card.children.count() > 0 %}
+                        <div class="children" style="display: none;">
+                            {% for child in card.children.order_by() %}
+                                <div class="table-row">
+                                    <div class="row-item">--></div>
+                                    <div class="row-item">
+                                        {% if child.children.count() > 0 %}
+                                            <button class="toggle-children">↓</button>
+                                        {% endif %}
+                                        {{ child.chinese }} {{ child.transcription }}
+                                    </div>
+                                    <div class="row-item">{{ child.translation }}</div>
+                                    {% if current_user.is_authenticated %}
+                                        {% if child.perf_by_user(current_user.id) %}
+                                            <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                            <div class="row-item">{{ child.perf_by_user(current_user.id) }}</div>
+                                            <div class="row-item">
+                                                <a href="/words/null/{{ child.perf_by_user(current_user.id).id }}"
+                                                   class="btn btn-outline-secondary">Обнулить</a>
+                                            </div>
+                                        {% else %}
+                                            <div class="row-item">-</div>
+                                            <div class="row-item">-</div>
+                                            <div class="row-item">-</div>
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
-                                {% if current_user.username == "admin" %}
-                                    <div class="row-item">
-                                        <a href="{{ url_for('remove_child', back='words', card_id=child.id, parent_id = card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
-                                           class="btn btn-primary">Убрать</a>
+                                    {% if current_user.username == "admin" %}
+                                        <div class="row-item">
+                                            <a href="{{ url_for('remove_child', back='words', card_id=child.id, parent_id = card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
+                                               class="btn btn-primary">Убрать</a>
+                                        </div>
+                                        <div class="row-item">
+                                            <a href="{{ url_for('get_childs', back='words', id = child.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
+                                               class="btn btn-primary">Разложить</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if child.children.count() > 0 %}
+                                    <div class="children2" style="display: none;">
+                                        {% for child2 in child.children.order_by() %}
+                                            <div class="table-row">
+                                                <div class="row-item">--></div>
+                                                <div class="row-item">
+                                                    {% if child2.children.count() > 0 %}
+                                                        <button class="toggle-children">↓</button>
+                                                    {% endif %}
+                                                    {{ child2.chinese }} {{ child2.transcription }}
+                                                </div>
+                                                <div class="row-item">{{ child2.translation }}</div>
+                                                {% if current_user.is_authenticated %}
+                                                    {% if child2.perf_by_user(current_user.id) %}
+                                                        <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                                        <div class="row-item">{{ child2.perf_by_user(current_user.id) }}</div>
+                                                        <div class="row-item">
+                                                            <a href="/words/null/{{ child2.perf_by_user(current_user.id).id }}"
+                                                               class="btn btn-outline-secondary">Обнулить</a>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="row-item">-</div>
+                                                        <div class="row-item">-</div>
+                                                        <div class="row-item">-</div>
+                                                    {% endif %}
+                                                {% endif %}
+                                                {% if current_user.username == "admin" %}
+                                                    <div class="row-item">
+                                                        <a href="{{ url_for('remove_child', back='words', card_id=child2.id, parent_id = child.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
+                                                           class="btn btn-primary">Убрать</a>
+                                                    </div>
+                                                    <div class="row-item"></div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
                                     </div>
-                                    <div class="row-item">
-                                        <a href="{{ url_for('get_childs', back='words', id = child.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
-                                           class="btn btn-primary">Разложить</a>
-                                    </div>
                                 {% endif %}
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 {% endfor %}
+
             </div>
             {% if words.pages > 1 %}
                 <div class="pagination-container">
@@ -150,6 +200,21 @@
 {% endblock %}
 {% if current_user.is_authenticated %}
     {% block scripts %}
+        <script>
+            window.addEventListener('DOMContentLoaded', function () {
+                const toggleButtons = document.querySelectorAll('.toggle-children');
+                console.log(toggleButtons)
+                toggleButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const parent = button.parentElement.parentElement;
+                        const children = parent.nextElementSibling;
+                        children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                        button.textContent = children.style.display === 'none' ? '↓' : '↑'
+                    });
+                });
+            })
+        </script>
+
         <script>
             window.addEventListener("load", function () {
                 var accuracyCells = document.querySelectorAll('.percent');

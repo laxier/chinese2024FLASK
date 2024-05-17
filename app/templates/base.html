@@ -113,11 +113,6 @@
         border-bottom: 1px solid #dadada;
     }
 
-    .table-row:last-child,
-    .row-sub-container.row-item:last-child {
-        border-bottom: 0;
-    }
-
     .container {
         margin-bottom: 10px;
     }
@@ -249,12 +244,12 @@
         background-color: transparent !important;
     }
 
-    .modal-content {
+    .dark-theme .modal-content {
         background-color: var(--bs-dark-bg);
     }
 
-    .modal-header, .modal-body {
-        border: var(--black-border); /* Slightly lighter gray border for some contrast */
+    .dark-theme .modal-header, .modal-body {
+        border: var(--black-border);
     }
 
     .dark-theme .nav-link {
@@ -387,7 +382,10 @@
         color: var(--bs-element-color);
     }
 
-    #}#}
+    .pagination .page-item .page-link:hover {
+        background-color: var(--bs-hover-color);
+        color: var(--bs-element-color);
+    }
 
     {% block styles %}
     {% endblock %}
