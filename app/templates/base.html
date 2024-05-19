@@ -387,6 +387,11 @@
         color: var(--bs-element-color);
     }
 
+    .character-container {
+        display: flex;
+        justify-content: center;
+    }
+
     {% block styles %}
     {% endblock %}
 </style>
@@ -448,7 +453,7 @@
 
 <script>
     function getTheme() {
-        return sessionStorage.getItem('theme') || 'light';
+        return localStorage.getItem('theme') || 'light';
     }
 
     function toggleTheme() {
@@ -456,11 +461,11 @@
         const checkbox = document.getElementById('darkSwitch');
         if (body.classList.contains('dark-theme')) {
             body.classList.remove('dark-theme');
-            sessionStorage.setItem('theme', 'light');
+            localStorage.setItem('theme', 'light');
             checkbox.checked = false;
         } else {
             body.classList.add('dark-theme');
-            sessionStorage.setItem('theme', 'dark');
+            localStorage.setItem('theme', 'dark');
             checkbox.checked = true;
         }
     }

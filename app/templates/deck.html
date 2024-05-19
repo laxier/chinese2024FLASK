@@ -248,15 +248,18 @@
             function showModal(answer) {
                 var modalBody = document.querySelector('.modal-body');
                 modalBody.style.display = 'flex';
-                modalBody.style.flexDirection = 'row';
+                modalBody.style.flexDirection = 'column';
                 modalBody.style.flexWrap = 'nowrap';
                 modalBody.style.justifyContent = 'center';
 
                 modalBody.innerHTML = '';
-                const isDarkMode = sessionStorage.getItem('theme') === 'dark';
+                const isDarkMode = localStorage.getItem('theme') === 'dark';
                 const strokeColor = isDarkMode ? '#ffffff' : '#333333';
                 const outlineColor = isDarkMode ? '#333333' : '#ffffff';
 
+                var characterContainer = document.createElement('div');
+                characterContainer.classList.add('character-container');
+                modalBody.appendChild(characterContainer);
 
                 var answers = answer.split('');
                 answers.forEach(function (char, index) {
@@ -265,7 +268,8 @@
                     charDiv.id = charTargetId;
                     charDiv.style.width = '100px';
                     charDiv.style.height = '100px';
-                    modalBody.appendChild(charDiv);
+                    characterContainer.appendChild(charDiv);
+
 
                     var writer = HanziWriter.create(charTargetId, char, {
                         width: 100,
@@ -280,7 +284,33 @@
                         writer.animateCharacter();
                     });
                 });
+
+                fetchTranslation(answer).then(function (data) {
+                    var pronounciationDiv = document.createElement('div');
+                    pronounciationDiv.textContent = data.pronunciation;
+                    pronounciationDiv.classList.add('character-container');
+                    modalBody.appendChild(pronounciationDiv);
+
+                    var translateDiv = document.createElement('div');
+                    translateDiv.textContent = data.translation;
+                    translateDiv.classList.add('character-container');
+                    modalBody.appendChild(translateDiv);
+                });
+
+
                 $('#modal').modal('show');
+            }
+
+            function fetchTranslation(char) {
+                return fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({'char': char})
+                })
+                    .then(response => response.json())
+                    .catch(error => console.error('Ошибка:', error));
             }
 
             var themeSwitch = document.querySelector('[data-theme-toggle]');
@@ -298,7 +328,8 @@
 
             function toggleThemeGraph() {
                 const body = document.body;
-                const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                const isDarkMode = localStorage.getItem('theme') === 'dark';
+                const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
                 if (body.classList.contains('light-theme')) {
                     updateChartGridColor(gridColor);
                 } else {

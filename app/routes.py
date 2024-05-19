@@ -276,6 +276,7 @@ def words():
         words = Card.query.paginate(page=page, per_page=words_per_page, error_out=False)
     return render_template('words.html', words=words, search=search)
 
+
 @app.route("/<string:back>/remove_child/<int:card_id>/<int:parent_id>")
 def remove_child(back, card_id, parent_id):
     card = Card.query.get_or_404(card_id)
@@ -286,6 +287,7 @@ def remove_child(back, card_id, parent_id):
     search_query = request.args.get('search', '')
     page_query = request.args.get('page', 1, type=int)
     return redirect(url_for('words', back=back, search=search_query, page=page_query))
+
 
 @app.route('/words/retry')
 @login_required
@@ -321,6 +323,7 @@ def get_childs(id, back):
             return redirect(redirect_url)
     else:
         return "Недостаточно прав"
+
 
 @app.route('/<string:back>/get_radicals/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -423,16 +426,26 @@ def format_date(date):
     return formatted_date
 
 
+@app.route('/api/translate', methods=['POST'])
+def translate():
+    char = request.json['char']
+    card = Card.query.filter_by(chinese=char).first()
+    translation = card.translation
+    pronunciation = card.transcription
+    return jsonify({'translation': translation, 'pronunciation': pronunciation})
+
+
 @app.route('/get-performance-data/<deck_id>/<user_id>', methods=['GET'])
 def get_performance_data(deck_id, user_id):
     data = DeckPerformance.query.filter_by(user_id=user_id, deck_id=deck_id).all()
     performance_data = {
-        'id' : [row.id for row in data],
+        'id': [row.id for row in data],
         'dates': [format_date(row.test_date) for row in data],
         'percentages': [row.percent_correct for row in data],
         'wrongAnswers': [row.wrong_answers for row in data]
     }
     return jsonify(performance_data)
+
 
 @app.route('/delete-deck-perf/<perf_id>/<deck_id>', methods=['GET'])
 def delete_deck_perf(perf_id, deck_id):
