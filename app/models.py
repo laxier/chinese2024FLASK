@@ -154,6 +154,11 @@ class Deck(db.Model):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         return db.session.execute(query).one().edited
 
+    def get_last_performances(self, user_id, n):
+        deck_performances = DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id).order_by(
+            DeckPerformance.test_date.desc()).limit(n).all()
+        return deck_performances
+
     def sort_timestamp_by_user(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         progress = db.session.execute(query).first()
@@ -293,7 +298,7 @@ class character(db.Model):
 
     def get_childs(self):
         words = decomposeWord(self.chinese)
-        if words==[]:
+        if words == []:
             return "Error happened"
         log = f"{self.chinese}\n"
         for element in words[1::]:

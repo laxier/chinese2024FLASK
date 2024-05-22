@@ -49,11 +49,41 @@
         margin: 0 auto;
     }
 
+    .progress-slim {
+        height: 5px;
+    }
+    .dark-theme .bg-success {
+        background-color: #24793c !important;
+    }
+
+    .dark-theme .bg-warning {
+        background-color: #e3c526 !important;
+    }
+
+    .dark-theme .bg-danger {
+        background-color: #d52a2a !important;
+    }
+
+
+    .progress-bar-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-text {
+        font-size: 14px;
+    }
+
     .card {
         flex: 0 1 calc(25% - 1em);
         box-sizing: border-box;
         margin: .25rem;
     }
+
+    {#.card-body {#}
+    {#    flex: 0 1 auto;#}
+    {
+    #}#}
 
     .card:last-child {
         flex: 0 0 calc(25% - 1em); /* Set the flex-grow component to 0 */
@@ -197,6 +227,7 @@
 
     .dark-theme {
     {#/Цвет при наведении */#} --bs-hover-color: #424949;
+
         --dark-secondary-color: #2e31336b;
     {#Фоновый цвет#} --bs-dark-bg: #181a1b;
         --bs-element-color: #d6d6d6;

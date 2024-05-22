@@ -19,8 +19,24 @@
                                 {% endif %}
                             </div>
                             <div class="card-footer text-muted">
-                                {{ moment(deck.edited_by_user(current_user.id)).fromNow() }}
-                                {{ deck.percent_for_user(current_user.id)}}%
+                                <div class="progress-bar-row">
+                                    <span class="progress-text">{{ moment(deck.edited_by_user(current_user.id)).fromNow() }}</span>
+                                    <span class="progress-text">{{ deck.percent_for_user(current_user.id) }}%</span>
+                                </div>
+                                {% set percent = deck.percent_for_user(current_user.id) %}
+                                {% if percent >= 80 %}
+                                    {% set progress_color = 'bg-success' %}
+                                {% elif percent >= 60 %}
+                                    {% set progress_color = 'bg-warning' %}
+                                {% else %}
+                                    {% set progress_color = 'bg-danger' %}
+                                {% endif %}
+                                <div class="progress progress-slim">
+                                    <div class="progress-bar {{ progress_color }}" role="progressbar"
+                                         aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"
+                                         style="width: {{ percent }}%;"></div>
+                                </div>
+
                             </div>
                         </div>
                     {% endfor %}
