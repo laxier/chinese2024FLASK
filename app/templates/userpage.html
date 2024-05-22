@@ -8,32 +8,34 @@
                 {% if user.decks %}
                     {% for deck in user.sort_user_decs() %}
                         <div class="card">
-                            <div class="card-body" style="padding-bottom: 0; padding-top: calc(var(--bs-card-spacer-y)/1.7)">
+                            <div class="card-body"
+                                 style="padding-bottom: 0; padding-top: calc(var(--bs-card-spacer-y)/1.7)">
                                 <h5 class="card-title">{{ deck.name }}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">by {{ deck.creator.username }}</h6>
+                                <div class="progress-bar-container">
+                                    {% for performance in deck.get_last_performances(user.id, 3) %}
+                                        {% set percent = performance.percent_correct %}
+                                        {% if percent >= 80 %}
+                                            {% set progress_color = 'bg-success' %}
+                                        {% elif percent >= 60 %}
+                                            {% set progress_color = 'bg-warning' %}
+                                        {% else %}
+                                            {% set progress_color = 'bg-danger' %}
+                                        {% endif %}
+                                        <div class="progress-bar-row">
+                                            <span class="progress-text">{{ moment(performance.test_date).fromNow() }}</span>
+                                            <span class="progress-text">{{ performance.percent_correct }}%</span>
+                                        </div>
+                                        <div class="progress progress-slim">
+                                            <div class="progress-bar {{ progress_color }}" role="progressbar"
+                                                 aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"
+                                                 style="width: {{ percent }}%;"></div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <div class="progress-bar-container"
-                                 style="padding: 0 var(--bs-card-spacer-x); padding-bottom: calc(var(--bs-card-spacer-y)/1.7)">
-                                {% for performance in deck.get_last_performances(user.id, 3) %}
-                                    {% set percent = performance.percent_correct %}
-                                    {% if percent >= 80 %}
-                                        {% set progress_color = 'bg-success' %}
-                                    {% elif percent >= 60 %}
-                                        {% set progress_color = 'bg-warning' %}
-                                    {% else %}
-                                        {% set progress_color = 'bg-danger' %}
-                                    {% endif %}
-                                    <div class="progress-bar-row">
-                                        <span class="progress-text">{{ moment(performance.test_date).fromNow() }}</span>
-                                        <span class="progress-text">{{ performance.percent_correct }}%</span>
-                                    </div>
-                                    <div class="progress progress-slim">
-                                        <div class="progress-bar {{ progress_color }}" role="progressbar"
-                                             aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"
-                                             style="width: {{ percent }}%;"></div>
-                                    </div>
-
-                                {% endfor %}
+                            <div
+                                    style="padding: 0 var(--bs-card-spacer-x); padding-bottom: calc(var(--bs-card-spacer-y)/1.7)">
                                 <div>
                                     <a href="/deck/{{ deck.id }}" class="card-link">Open</a>
                                     <a href="/test/{{ deck.id }}" class="card-link">Test</a>
