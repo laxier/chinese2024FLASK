@@ -13,6 +13,7 @@
                                 <h5 class="card-title">{{ deck.name }}</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">by {{ deck.creator.username }}</h6>
                                 <a href="/deck/{{ deck.id }}" class="card-link">Open</a>
+                                <a href="/review/{{ deck.id }}" class="card-link">Repeat</a>
                                 <a href="/test/{{ deck.id }}" class="card-link">Test</a>
                                 {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
                                     <a href="/edit_deck/{{ deck.id }}" class="card-link">Edit</a>

@@ -9,6 +9,8 @@ import sqlalchemy.orm as so
 from chinese_tools import searchWord, decomposeWord
 from app import db
 from app import login
+import math
+from datetime import timedelta
 
 
 class User(UserMixin, db.Model):
@@ -171,6 +173,20 @@ class Deck(db.Model):
         else:
             return self.cards
 
+    def get_cards_to_review(self, user_id):
+        """
+    Возвращает список карточек из этой колоды, требующих повторения на текущую дату.
+    Список отсортирован по значению next_review_date из CardPerformance.
+    """
+
+        current_date = datetime.now()
+        query = db.session.query(Card).join(Card.card_performance) \
+            .filter(Card.decks.contains(self),
+                    CardPerformance.user_id == user_id,
+                    CardPerformance.next_review_date <= current_date) \
+            .order_by(CardPerformance.next_review_date)
+        return query.all()
+
     def sort_perf_by_user(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         progress = db.session.execute(query).first()
@@ -222,16 +238,47 @@ deck_cards = db.Table(
 )
 
 
+class SpacedRepetition:
+    def __init__(self, ef_factor=2.5):
+        self.ef_factor = ef_factor
+
+    def calculate_interval(self, repetitions, quality):
+        """
+        Вычисляет следующий интервал повторения на основе алгоритма SuperMemo 2 (SM-2).
+
+        repetitions: количество предыдущих повторений
+        quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
+        """
+        if repetitions == 0:
+            interval = 1
+        elif repetitions == 1:
+            interval = 6
+        else:
+            interval = math.ceil(self.ef_factor * (repetitions - 1))
+
+        if quality < 3:
+            interval = 1
+        else:
+            self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            if self.ef_factor < 1.3:
+                self.ef_factor = 1.3
+
+        return interval
+
+
 class CardPerformance(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
+    user: so.Mapped[User] = so.relationship(back_populates="card_performance")
+    card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
+    card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
+    ef_factor = sa.Column(sa.Float, default=2.5)
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
-    user: so.Mapped[User] = so.relationship(back_populates="card_performance")
     timestamp: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
-    card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
-    card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
+    edited: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    next_review_date: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
 
     @property
     def accuracy_percentage(self):
@@ -243,13 +290,51 @@ class CardPerformance(db.Model):
             return round((self.right / 5) * 100)
 
     def correct(self):
-        self.repetitions += 1
-        self.right += 1
+        current_utc_date = datetime.now(timezone.utc).date()
+        if self.edited.date() == current_utc_date:
+            pass
+        else:
+            self.repetitions += 1
+            self.right += 1
+
+            quality = self.calculate_quality()
+            spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
+            interval = spaced_repetition.calculate_interval(self.repetitions, quality)
+            self.ef_factor = spaced_repetition.ef_factor  # Update ef_factor from SpacedRepetition
+            self.edited = datetime.now(timezone.utc)
+            self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
     def incorrect(self):
-        self.repetitions += 1
-        self.wrong += 1
-        self.timestamp = datetime.now(timezone.utc)
+        current_utc_date = datetime.now(timezone.utc).date()
+        if self.edited.date() == current_utc_date:
+            pass
+        else:
+            self.repetitions += 1
+            self.wrong += 1
+            spaced_repetition = SpacedRepetition()
+            quality = self.calculate_quality()
+
+            if self.accuracy_percentage >= 80:
+                quality = 3
+
+            spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
+            interval = spaced_repetition.calculate_interval(self.repetitions, quality)
+            self.ef_factor = spaced_repetition.ef_factor
+            self.edited = datetime.now(timezone.utc)
+            self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+
+    def calculate_quality(self):
+        accuracy = self.accuracy_percentage
+        if accuracy >= 90:
+            return 5
+        elif accuracy >= 70:
+            return 4
+        elif accuracy >= 50:
+            return 3
+        elif accuracy >= 30:
+            return 2
+        else:
+            return 1
 
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'

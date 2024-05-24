@@ -2,8 +2,8 @@
 
 {% block content %}
     <main class="container">
-        <h1>Флеш карты. Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
-        {% if deck.cards %}
+        <h1>{{ title2 }} Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
+        {% if to_test %}
             <div class="container" style="    padding-bottom: 15%; padding-top: 5%; width: 80%;">
                 <div id="flashcard" class="flashcard">
                     <div class="card-header" style="width:100%">
@@ -33,9 +33,13 @@
                     </div>
                 </div>
             </div>
+        {% else %}
+            <div>
+                Пока нет слов для повторения
+            </div>
         {% endif %}
         <div class="container">
-            {% if deck.cards %}
+            {% if to_test %}
                 <div class="table-container">
                     <div class="table-row heading">
                         <div class="row-item">Слово</div>
@@ -45,27 +49,37 @@
                             <div class="row-item">Текущий прогресс</div>
                         {% endif %}
                     </div>
+                    {% for card in to_test %}
+                        <div class="table-row" card-id="{{ card.id }}">
+                            <div class="row-item chinese">{{ card.chinese }}</div>
+                            <div class="row-item transcript">{{ card.transcription }}</div>
+                            <div class="row-item translations">{{ card.translation }}</div>
+                            <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="table-container">
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Произношение</div>
+                    <div class="row-item">Перевод</div>
                     {% if current_user.is_authenticated %}
-                        {% for card in deck.sort_perf_by_user(current_user.id) %}
-                            <div class="table-row" card-id="{{ card.id }}">
-                                <div class="row-item chinese">{{ card.chinese }}</div>
-                                <div class="row-item transcript">{{ card.transcription }}</div>
-                                <div class="row-item translations">{{ card.translation }}</div>
-                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        {% for card in deck.cards %}
-                            <div class="table-row">
-                                <div class="row-item chinese">{{ card.chinese }}</div>
-                                <div class="row-item transcript">{{ card.transcription }}</div>
-                                <div class="row-item translations">{{ card.translation }}</div>
-                            </div>
-                        {% endfor %}
+                        <div class="row-item">Текущий прогресс</div>
+                        <div class="row-item">Повторение</div>
                     {% endif %}
                 </div>
+                {% for card in deck.cards %}
+                    <div class="table-row" card-id="{{ card.id }}">
+                        <div class="row-item chinese">{{ card.chinese }}</div>
+                        <div class="row-item transcript">{{ card.transcription }}</div>
+                        <div class="row-item translations">{{ card.translation }}</div>
+                        <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                        <div class="row-item percent">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
+                    </div>
+                {% endfor %}
             {% endif %}
-        </div>
+            </div>
     </main>
 {% endblock %}
 
@@ -122,9 +136,10 @@
                     isQuizEnding = true;
                     progress += increment;
                     progress_bar.style.width = `${progress}%`;
+
                     function endQuiz() {
                         alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
-                        {% if deck in current_user.decks %}
+                        {% if (deck in current_user.decks) and (test == True) %}
                             console.log(incorrects)
                             fetch('/api/update-deck', {
                                 method: 'POST',
@@ -132,7 +147,7 @@
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                    'percent': Math.min(100,Math.round(countRight / Rows.length * 100)),
+                                    'percent': Math.min(100, Math.round(countRight / Rows.length * 100)),
                                     'id': {{ deck.id }},
                                     'incorrect': incorrects,
                                 }),

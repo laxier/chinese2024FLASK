@@ -367,7 +367,21 @@ def get_radicals(id, back):
 @app.route('/test/<int:id>')
 def test(id):
     deck_curr = Deck.query.get_or_404(id)
-    return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
+    to_test = deck_curr.sort_perf_by_user(current_user.id)
+    return render_template("test.html", title=f"Deck {deck_curr.name}",
+                           title2="Тест", deck=deck_curr,
+                           to_test=to_test, test = True)
+
+
+@app.route('/review/<int:id>')
+def review(id):
+    deck_curr = Deck.query.get_or_404(id)
+    if current_user.is_authenticated:
+        to_test = deck_curr.get_cards_to_review(user_id=current_user.id)
+    else:
+        to_test = deck_curr.cards
+    return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr,
+                           title2="Повторение", to_test=to_test, test = False)
 
 
 @app.route('/api/update-performance', methods=['POST'])

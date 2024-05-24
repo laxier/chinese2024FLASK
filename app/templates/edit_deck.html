@@ -30,7 +30,7 @@
                         <div class="row-item">Убрать</div>
                     {% endif %}
                 </div>
-                {% for card in deck.sort_percent_by_user(current_user.id) %}
+                {% for card in deck.cards %}
                     <div class="table-row">
                         <div class="row-item">{{ card.chinese }}</div>
                         <div class="row-item">{{ card.transcription }}</div>

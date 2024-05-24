@@ -9,6 +9,7 @@
                     <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
                 {% endif %}
                 {% if deck in current_user.decks %}
+                    <a href="/review/{{ deck.id }}" class="btn btn-outline-secondary">Повторить</a>
                     <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
                 {% else %}
                     <a href="/add_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
@@ -33,7 +34,7 @@
                         <div class="row-item">Статистика</div>
                         <div class="row-item">Раунды</div>
                     </div>
-                    {% for card in deck.sort_percent_by_user(current_user.id) %}
+                    {% for card in deck.cards %}
                         <div class="table-row parent">
                             <div class="row-item">
                                 {% if card.children.count() > 0 %}
