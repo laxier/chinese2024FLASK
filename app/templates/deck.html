@@ -33,6 +33,7 @@
                         <div class="row-item">Перевод</div>
                         <div class="row-item">Статистика</div>
                         <div class="row-item">Раунды</div>
+                        <div class="row-item">Повторение</div>
                     </div>
                     {% for card in deck.cards %}
                         <div class="table-row parent">
@@ -46,6 +47,7 @@
                             <div class="row-item">{{ card.translation }}</div>
                             <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                             <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                            <div class="row-item">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
                         </div>
                         {% if card.children.count() > 0 %}
                             <div class="children" style="display: none;">

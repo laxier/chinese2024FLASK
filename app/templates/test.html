@@ -139,23 +139,39 @@
 
                     function endQuiz() {
                         alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
-                        {% if (deck in current_user.decks) and (test == True) %}
-                            console.log(incorrects)
-                            fetch('/api/update-deck', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    'percent': Math.min(100, Math.round(countRight / Rows.length * 100)),
-                                    'id': {{ deck.id }},
-                                    'incorrect': incorrects,
-                                }),
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    console.log(data);
-                                });
+                        {% if deck in current_user.decks %}
+                            {% if test == True %}
+                                fetch('/api/update-deck', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        'percent': Math.min(100, Math.round(countRight / Rows.length * 100)),
+                                        'id': {{ deck.id }},
+                                        'incorrect': incorrects,
+                                    }),
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data);
+                                    });
+                            {% else %}
+                                fetch('/api/update-deck-nontest', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        'id': {{ deck.id }},
+                                        'incorrect': incorrects,
+                                    }),
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data);
+                                    });
+                            {% endif %}
                         {% endif %}
                         restartQuiz();
                         progress_bar.removeEventListener('transitionend', endQuiz);

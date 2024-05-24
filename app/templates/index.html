@@ -5,9 +5,9 @@
         <h1>Hi, {{ current_user.username }}!</h1>
         <h1>Недавние модули</h1>
         <div class="container">
-            {% if current_user.sort_user_decs_four() %}
+            {% if current_user.sort_user_decs_n(4) %}
                 <div class="cards">
-                    {% for deck in current_user.sort_user_decs_four() %}
+                    {% for deck in current_user.sort_user_decs_n(4) %}
                         <div class="card" style="flex: 1 1 calc(25% - 1em);">
                             <div class="card-body">
                                 <h5 class="card-title">{{ deck.name }}</h5>

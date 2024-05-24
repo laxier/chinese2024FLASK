@@ -370,7 +370,7 @@ def test(id):
     to_test = deck_curr.sort_perf_by_user(current_user.id)
     return render_template("test.html", title=f"Deck {deck_curr.name}",
                            title2="Тест", deck=deck_curr,
-                           to_test=to_test, test = True)
+                           to_test=to_test, test=True)
 
 
 @app.route('/review/<int:id>')
@@ -381,7 +381,7 @@ def review(id):
     else:
         to_test = deck_curr.cards
     return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr,
-                           title2="Повторение", to_test=to_test, test = False)
+                           title2="Повторение", to_test=to_test, test=False)
 
 
 @app.route('/api/update-performance', methods=['POST'])
@@ -417,14 +417,37 @@ def update_deck():
     id = data.get('id')
     percent = data.get('percent')
     incorrect = data.get('incorrect', [])
-    incorrect = ', '.join(str(card_id) for card_id in incorrect)
+    incorrect = ', '.join(str(card) for card in incorrect)
     if percent is None:
         return jsonify({'error': 'Missing percent'})
     if id is None:
         return jsonify({'error': 'Missing id'})
-    deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent, test_date=datetime.now(),
+    if incorrect is None:
+        return jsonify({'error': 'Missing incorrect'})
+    deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent, test_date=datetime.now(timezone.utc),
                                 wrong_answers=incorrect)
     db.session.add(deck_perf)
+    update_query = user_decks.update().values(percent=percent).where(
+        (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
+    db.session.execute(update_query)
+    db.session.commit()
+    return jsonify({'message': 'processed successfully'})
+
+
+@app.route('/api/update-deck-nontest', methods=['POST'])
+@login_required
+def update_deck_nontest():
+    data = request.get_json()
+    id = data.get('id')
+    incorrect = data.get('incorrect', [])
+    percent = round(100*(1 - len(incorrect) / len(Deck.query.filter_by(id=id).first().cards)))
+    if percent is None:
+        return jsonify({'error': 'Missing percent'})
+    if incorrect is None:
+        return jsonify({'error': 'Missing incorrect'})
+    # deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent, test_date=datetime.now(timezone.utc),
+    #                             wrong_answers=incorrect)
+    # db.session.add(deck_perf)
     update_query = user_decks.update().values(percent=percent).where(
         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
     db.session.execute(update_query)

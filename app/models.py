@@ -41,12 +41,12 @@ class User(UserMixin, db.Model):
             .order_by(user_decks.c.timestamp.desc())
         return query.all()
 
-    def sort_user_decs_four(self):
+    def sort_user_decs_n(self, n):
         query = Deck.query \
             .join(user_decks) \
             .filter(user_decks.c.user_id == self.id) \
             .order_by(user_decks.c.edited.desc())
-        return query.limit(4).all()
+        return query.limit(n).all()
 
 
 childrens = db.Table(
@@ -119,6 +119,7 @@ class Card(db.Model):
             return 0
         else:
             performance = CardPerformance(user=user, card=self)
+            print(performance)
             db.session.add(performance)
             return 0
 
@@ -175,10 +176,9 @@ class Deck(db.Model):
 
     def get_cards_to_review(self, user_id):
         """
-    Возвращает список карточек из этой колоды, требующих повторения на текущую дату.
-    Список отсортирован по значению next_review_date из CardPerformance.
-    """
-
+        Возвращает список карточек из этой колоды, требующих повторения на текущую дату.
+        Список отсортирован по значению next_review_date из CardPerformance.
+        """
         current_date = datetime.now()
         query = db.session.query(Card).join(Card.card_performance) \
             .filter(Card.decks.contains(self),
@@ -239,7 +239,7 @@ deck_cards = db.Table(
 
 
 class SpacedRepetition:
-    def __init__(self, ef_factor=2.5):
+    def __init__(self, ef_factor=1.5):
         self.ef_factor = ef_factor
 
     def calculate_interval(self, repetitions, quality):
@@ -252,7 +252,7 @@ class SpacedRepetition:
         if repetitions == 0:
             interval = 1
         elif repetitions == 1:
-            interval = 6
+            interval = 2
         else:
             interval = math.ceil(self.ef_factor * (repetitions - 1))
 
@@ -260,8 +260,8 @@ class SpacedRepetition:
             interval = 1
         else:
             self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            if self.ef_factor < 1.3:
-                self.ef_factor = 1.3
+            if self.ef_factor < 0.7:
+                self.ef_factor = 0.7
 
         return interval
 
@@ -272,7 +272,7 @@ class CardPerformance(db.Model):
     user: so.Mapped[User] = so.relationship(back_populates="card_performance")
     card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
-    ef_factor = sa.Column(sa.Float, default=2.5)
+    ef_factor = sa.Column(sa.Float, default=1.5)
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
@@ -282,16 +282,14 @@ class CardPerformance(db.Model):
 
     @property
     def accuracy_percentage(self):
-        if self.repetitions == 0:
-            return 0
-        if self.repetitions > 5:
+        if self.repetitions > 0:
             return round((self.right / self.repetitions) * 100)
         else:
-            return round((self.right / 5) * 100)
+            return 0
 
     def correct(self):
         current_utc_date = datetime.now(timezone.utc).date()
-        if self.edited.date() == current_utc_date:
+        if self.edited.date() == current_utc_date and self.repetitions != 0:
             pass
         else:
             self.repetitions += 1
@@ -306,22 +304,24 @@ class CardPerformance(db.Model):
 
     def incorrect(self):
         current_utc_date = datetime.now(timezone.utc).date()
-        if self.edited.date() == current_utc_date:
+
+        if self.edited.date() == current_utc_date and self.repetitions != 0:
             pass
         else:
             self.repetitions += 1
-            self.wrong += 1
-            spaced_repetition = SpacedRepetition()
-            quality = self.calculate_quality()
+        self.wrong += 1
+        spaced_repetition = SpacedRepetition()
+        quality = self.calculate_quality()
 
-            if self.accuracy_percentage >= 80:
-                quality = 3
+        if self.accuracy_percentage >= 80:
+            quality = 3
 
-            spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
-            interval = spaced_repetition.calculate_interval(self.repetitions, quality)
-            self.ef_factor = spaced_repetition.ef_factor
-            self.edited = datetime.now(timezone.utc)
-            self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+        spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
+        interval = spaced_repetition.calculate_interval(self.repetitions, quality)
+        self.ef_factor = spaced_repetition.ef_factor
+        self.edited = datetime.now(timezone.utc)
+        self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+
 
     def calculate_quality(self):
         accuracy = self.accuracy_percentage
@@ -335,6 +335,7 @@ class CardPerformance(db.Model):
             return 2
         else:
             return 1
+
 
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'
