@@ -162,6 +162,23 @@ class Deck(db.Model):
             DeckPerformance.test_date.desc()).limit(n).all()
         return deck_performances
 
+    def review_deck(self, user_id, performance):
+        deck_performance = performance
+        spaced_repetition = DeckSpacedRepetition(deck_performance.ef_factor)
+        quality = deck_performance.calculate_quality()
+
+        interval = spaced_repetition.calculate_interval(deck_performance.repetitions, quality)
+        deck_performance.ef_factor = spaced_repetition.ef_factor
+        last_count = DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id,
+                                                     is_latest=True).first().repetitions
+        deck_performance.repetitions = last_count + 1
+        deck_performance.last_review_date = datetime.now(timezone.utc)
+        deck_performance.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+        deck_performance.is_latest = True
+        DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id).filter(
+            DeckPerformance.id != deck_performance.id).update({'is_latest': False}, synchronize_session=False)
+        db.session.commit()
+
     def sort_timestamp_by_user(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         progress = db.session.execute(query).first()
@@ -239,7 +256,7 @@ deck_cards = db.Table(
 
 
 class SpacedRepetition:
-    def __init__(self, ef_factor=1.5):
+    def __init__(self, ef_factor=2):
         self.ef_factor = ef_factor
 
     def calculate_interval(self, repetitions, quality):
@@ -252,7 +269,9 @@ class SpacedRepetition:
         if repetitions == 0:
             interval = 1
         elif repetitions == 1:
-            interval = 2
+            interval = 3
+        elif repetitions == 2:
+            interval = 7
         else:
             interval = math.ceil(self.ef_factor * (repetitions - 1))
 
@@ -260,8 +279,8 @@ class SpacedRepetition:
             interval = 1
         else:
             self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            if self.ef_factor < 0.7:
-                self.ef_factor = 0.7
+            if self.ef_factor < 1.3:
+                self.ef_factor = 1.3
 
         return interval
 
@@ -272,7 +291,7 @@ class CardPerformance(db.Model):
     user: so.Mapped[User] = so.relationship(back_populates="card_performance")
     card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
-    ef_factor = sa.Column(sa.Float, default=1.5)
+    ef_factor = sa.Column(sa.Float, default=2)
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
@@ -295,10 +314,10 @@ class CardPerformance(db.Model):
             self.repetitions += 1
             self.right += 1
 
-            quality = self.calculate_quality()
-            spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
+            quality = 5
+            spaced_repetition = SpacedRepetition(self.ef_factor)
             interval = spaced_repetition.calculate_interval(self.repetitions, quality)
-            self.ef_factor = spaced_repetition.ef_factor  # Update ef_factor from SpacedRepetition
+            self.ef_factor = spaced_repetition.ef_factor
             self.edited = datetime.now(timezone.utc)
             self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
@@ -310,21 +329,70 @@ class CardPerformance(db.Model):
         else:
             self.repetitions += 1
         self.wrong += 1
-        spaced_repetition = SpacedRepetition()
-        quality = self.calculate_quality()
+        quality = 2
 
         if self.accuracy_percentage >= 80:
-            quality = 3
+            quality = 1
 
-        spaced_repetition = SpacedRepetition(self.ef_factor)  # Pass ef_factor to SpacedRepetition
+        spaced_repetition = SpacedRepetition(self.ef_factor)
         interval = spaced_repetition.calculate_interval(self.repetitions, quality)
         self.ef_factor = spaced_repetition.ef_factor
         self.edited = datetime.now(timezone.utc)
         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
+    def __repr__(self):
+        return f'{self.right}/{self.repetitions}'
+
+
+class DeckSpacedRepetition:
+    def __init__(self, ef_factor=2.5):
+        self.ef_factor = ef_factor
+
+    def calculate_interval(self, repetitions, quality):
+        """
+        Вычисляет следующий интервал повторения колоды на основе алгоритма SuperMemo 2 (SM-2).
+
+        repetitions: количество предыдущих повторений колоды
+        quality: оценка качества запоминания колоды от 0 (забыли) до 5 (легко запомнили)
+        """
+        if repetitions == 0:
+            interval = 1
+        elif repetitions == 1:
+            interval = 5
+        else:
+            interval = math.ceil(self.ef_factor * (repetitions - 1))
+
+        if quality < 3:
+            interval = 1
+        else:
+            self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            if self.ef_factor < 1.3:
+                self.ef_factor = 1.3
+
+        return interval
+
+
+class DeckPerformance(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
+    deck_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Deck.id), nullable=False)
+    percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
+    test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
+    wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
+    ef_factor: so.Mapped[float] = so.mapped_column(default=2.5)
+    repetitions: so.Mapped[int] = so.mapped_column(default=1)
+    next_review_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now(timezone.utc))
+    last_review_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now(timezone.utc))
+    is_latest: so.Mapped[bool] = so.mapped_column(default=True)
+
+    def __repr__(self):
+        return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
 
     def calculate_quality(self):
-        accuracy = self.accuracy_percentage
+        """
+        Вычисляет оценку качества запоминания колоды (quality) на основе процента правильных ответов (percent_correct).
+        """
+        accuracy = self.percent_correct
         if accuracy >= 90:
             return 5
         elif accuracy >= 70:
@@ -335,22 +403,6 @@ class CardPerformance(db.Model):
             return 2
         else:
             return 1
-
-
-    def __repr__(self):
-        return f'{self.right}/{self.repetitions}'
-
-
-class DeckPerformance(db.Model):
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), nullable=False)
-    deck_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Deck.id), nullable=False)
-    percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
-    test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
-    wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
-
-    def __repr__(self):
-        return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
 
 
 character_rel = db.Table(
