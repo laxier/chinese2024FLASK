@@ -71,11 +71,13 @@
                         <div class="children" style="display: none;">
                             {% for child in card.children.order_by() %}
                                 <div class="table-row">
-                                    <div class="row-item">--></div>
                                     <div class="row-item">
                                         {% if child.children.count() > 0 %}
                                             <button class="toggle-children">↓</button>
                                         {% endif %}
+                                        -->
+                                    </div>
+                                    <div class="row-item">
                                         {{ child.chinese }} {{ child.transcription }}
                                     </div>
                                     <div class="row-item">{{ child.translation }}</div>

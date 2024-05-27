@@ -166,11 +166,12 @@ class Deck(db.Model):
         deck_performance = performance
         spaced_repetition = DeckSpacedRepetition(deck_performance.ef_factor)
         quality = deck_performance.calculate_quality()
+        last_count = DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id,
+                                                     is_latest=True).first().repetitions
+        deck_performance.repetitions = last_count
 
         interval = spaced_repetition.calculate_interval(deck_performance.repetitions, quality)
         deck_performance.ef_factor = spaced_repetition.ef_factor
-        last_count = DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id,
-                                                     is_latest=True).first().repetitions
         deck_performance.repetitions = last_count + 1
         deck_performance.last_review_date = datetime.now(timezone.utc)
         deck_performance.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
@@ -256,8 +257,9 @@ deck_cards = db.Table(
 
 
 class SpacedRepetition:
-    def __init__(self, ef_factor=2):
-        self.ef_factor = ef_factor
+    def __init__(self, initial_ef_factor=2):
+        self.ef_factor = initial_ef_factor
+        self._minimum_ef_factor = 1.3
 
     def calculate_interval(self, repetitions, quality):
         """
@@ -266,21 +268,16 @@ class SpacedRepetition:
         repetitions: количество предыдущих повторений
         quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
         """
-        if repetitions == 0:
+        if repetitions == 1:
             interval = 1
-        elif repetitions == 1:
-            interval = 3
-        elif repetitions == 2:
-            interval = 7
         else:
             interval = math.ceil(self.ef_factor * (repetitions - 1))
 
         if quality < 3:
             interval = 1
         else:
-            self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            if self.ef_factor < 1.3:
-                self.ef_factor = 1.3
+            new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
 
         return interval
 
@@ -307,8 +304,7 @@ class CardPerformance(db.Model):
             return 0
 
     def correct(self):
-        current_utc_date = datetime.now(timezone.utc).date()
-        if self.edited.date() == current_utc_date and self.repetitions != 0:
+        if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
             pass
         else:
             self.repetitions += 1
@@ -322,9 +318,7 @@ class CardPerformance(db.Model):
             self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
     def incorrect(self):
-        current_utc_date = datetime.now(timezone.utc).date()
-
-        if self.edited.date() == current_utc_date and self.repetitions != 0:
+        if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
             pass
         else:
             self.repetitions += 1
