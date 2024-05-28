@@ -9,3 +9,4 @@ class Config:
     # SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:rootroot@localhost/chinese'
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:rootroot@host.docker.internal/chinese'
     TIMEZONE = 'UTC'
+с

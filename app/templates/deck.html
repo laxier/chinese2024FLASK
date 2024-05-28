@@ -31,9 +31,9 @@
                         <div class="row-item">Слово</div>
                         <div class="row-item">Произношение</div>
                         <div class="row-item">Перевод</div>
-                        <div class="row-item">Статистика</div>
+                        <div class="row-item percent-header">Статистика</div>
                         <div class="row-item">Раунды</div>
-                        <div class="row-item">Повторение</div>
+                        <div class="row-item date-header">Повторение</div>
                     </div>
                     {% for card in deck.cards %}
                         <div class="card-row">
@@ -164,14 +164,22 @@
 {% block scripts %}
     <script>
         window.addEventListener('DOMContentLoaded', function () {
-            const percentHeader = document.querySelector('.heading .row-item:nth-child(4)');
-            const dateHeader = document.querySelector('.heading .row-item:nth-child(6)');
+            const percentHeader = document.querySelector('.heading .percent-header');
+            const dateHeader = document.querySelector('.heading .date-header');
 
             percentHeader.addEventListener('click', sortByPercent);
             dateHeader.addEventListener('click', sortByDate);
         });
 
-        let isPercentSortAscending = false;
+        function resetStyles() {
+            const percentHeader = document.querySelector('.percent-header');
+            const dateHeader = document.querySelector('.date-header');
+
+            percentHeader.classList.remove('ascending', 'descending');
+            dateHeader.classList.remove('ascending', 'descending');
+        }
+
+        let isPercentSortAscending = true;
 
         function sortByPercent() {
             const tableContainer = document.querySelector('.table-container');
@@ -199,10 +207,14 @@
             tableContainer.textContent = ''; // Clear the existing content
             tableContainer.appendChild(fragment);
 
-            isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order
+            resetStyles();
+            isPercentSortAscending = !isPercentSortAscending;
+            const percentHeader = document.querySelector('.heading .percent-header');
+            percentHeader.classList.remove('ascending', 'descending');
+            percentHeader.classList.add(isPercentSortAscending ? 'ascending' : 'descending');
         }
 
-        let isDateSortAscending = false;
+        let isDateSortAscending = true;
 
         function sortByDate() {
             const tableCont = document.querySelector('.table-container');
@@ -225,7 +237,7 @@
                 const bDate = new Date(bCard.performance.next_review_date);
 
                 // Sort by next_review_date in ascending order
-                return isDateSortAscending ? aDate - bDate : bDate - aDate;
+                return isDateSortAscending ? bDate - aDate : aDate - bDate;
             });
 
             const tableContainer = document.querySelector('.table-container');
@@ -239,12 +251,14 @@
 
             tableContainer.textContent = ''; // Clear the existing content
             tableContainer.appendChild(fragment);
-
-            isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order
             cardRows.forEach(row => tableContainer.appendChild(row));
-            isDateSortAscending = !isDateSortAscending; // Toggle the sorting order
-        }
 
+            resetStyles();
+            isDateSortAscending = !isDateSortAscending;
+            const dateHeader = document.querySelector('.heading .date-header');
+            dateHeader.classList.remove('ascending', 'descending');
+            dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');
+        }
     </script>
 
     {% if current_user.is_authenticated %}

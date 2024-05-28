@@ -436,6 +436,25 @@
         justify-content: center;
     }
 
+    .ascending,
+    .descending {
+        font-style: italic;
+        background-color: #F0F0F0;
+    }
+
+    .dark-theme .ascending,
+    .dark-theme .descending {
+        background-color: var(--bs-hover-color);
+    }
+
+    .ascending::after {
+        content: "▲";
+    }
+
+    .descending::after {
+        content: "▼";
+    }
+
     {% block styles %}
     {% endblock %}
 </style>
