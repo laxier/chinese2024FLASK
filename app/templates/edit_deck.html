@@ -127,19 +127,4 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-    <script>
-        window.addEventListener("load", function () {
-            var accuracyCells = document.querySelectorAll('.percent');
-            accuracyCells.forEach(function (cell) {
-                var accuracy = parseInt(cell.textContent);
-                if (accuracy >= 80) {
-                    cell.classList.add('green');
-                } else if (accuracy >= 60) {
-                    cell.classList.add('yellow');
-                } else if (accuracy >= 20) {
-                    cell.classList.add('red')
-                }
-            });
-        });
-    </script>
 {% endblock %}

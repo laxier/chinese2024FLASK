@@ -173,20 +173,6 @@
                     button.textContent = children.style.display === 'none' ? '↓' : '↑'
                 });
             });
-
-            const rowItems = document.querySelectorAll('div.row-item');
-            rowItems.forEach(rowItem => {
-                const chineseElement = rowItem.querySelector('.chinese');
-                if (chineseElement) {
-                    console.log(rowItem)
-                    rowItem.addEventListener('click', (event) => {
-                        if (!event.target.closest('.toggle-children')) {
-                            const answer = chineseElement.textContent.trim();
-                            showModal(answer);
-                        }
-                    });
-                }
-            });
             const percentHeader = document.querySelector('.heading .row-item:nth-child(4)');
             const dateHeader = document.querySelector('.heading .row-item:nth-child(6)');
 
@@ -225,31 +211,49 @@
             isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order
         }
 
+        let isDateSortAscending = false;
 
-        {#function sortByDate() {#}
-        {#    const rows = Array.from(document.querySelectorAll('.table-row:not(.heading)'));#}
-        {#    rows.sort((a, b) => {#}
-        {#        const aCardElement = a.querySelector('.row-item:first-child');#}
-        {#        const bCardElement = b.querySelector('.row-item:first-child');#}
-        {##}
-        {#        const aCardId = aCardElement.textContent.trim();#}
-        {#        const bCardId = bCardElement.textContent.trim();#}
-        {##}
-        {#        const cardsList = {{ deck.cards }};#}
-        {#        const cards = cardsList.map(card => card.as_dict());#}
-        {#        const aCard = cards.find(card => card.chinese === aCardId);#}
-        {#        const bCard = cards.find(card => card.chinese === bCardId);#}
-        {##}
-        {#        const aDate = new Date(aCard.perf_by_user({{ current_user.id }}).next_review_date);#}
-        {#        const bDate = new Date(bCard.perf_by_user({{ current_user.id }}).next_review_date);#}
-        {##}
-        {#        return aDate - bDate; // Sort in ascending order#}
-        {#    });#}
-        {##}
-        {#    const tableContainer = document.querySelector('.table-container');#}
-        {#    rows.forEach(row => tableContainer.appendChild(row));#}
-        {#{#}
-        {##}
+        function sortByDate() {
+            const tableCont = document.querySelector('.table-container');
+            const heading = tableCont.querySelector('.heading');
+            const cardRows = Array.from(tableCont.querySelectorAll('.card-row'));
+            cardRows.sort((a, b) => {
+                const aParentRow = a.querySelector('.parent');
+                const bParentRow = b.querySelector('.parent');
+
+                const aCardElement = aParentRow.querySelector('.chinese');
+                const bCardElement = bParentRow.querySelector('.chinese');
+
+                const aCardId = aCardElement.textContent.trim();
+                const bCardId = bCardElement.textContent.trim();
+
+                const deckData = JSON.parse('{{ deck_data|safe }}');
+                const aCard = deckData.cards.find(card => card.chinese === aCardId);
+                const bCard = deckData.cards.find(card => card.chinese === bCardId);
+                const aDate = new Date(aCard.performance.next_review_date);
+                const bDate = new Date(bCard.performance.next_review_date);
+
+                // Sort by next_review_date in ascending order
+                return isDateSortAscending ? aDate - bDate : bDate - aDate;
+            });
+
+            const tableContainer = document.querySelector('.table-container');
+            const fragment = document.createDocumentFragment();
+
+            fragment.appendChild(heading);
+
+            cardRows.forEach(cardRow => {
+                fragment.appendChild(cardRow);
+            });
+
+            tableContainer.textContent = ''; // Clear the existing content
+            tableContainer.appendChild(fragment);
+
+            {#isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order#}
+            {#cardRows.forEach(row => tableContainer.appendChild(row));#}
+            isDateSortAscending = !isDateSortAscending; // Toggle the sorting order
+        }
+
     </script>
 
     {% if current_user.is_authenticated %}
@@ -425,21 +429,6 @@
                     updateChartGridColor(gridColor);
                 }
             }
-        </script>
-        <script>
-            window.addEventListener("load", function () {
-                var accuracyCells = document.querySelectorAll('.percent');
-                accuracyCells.forEach(function (cell) {
-                    var accuracy = parseInt(cell.textContent);
-                    if (accuracy >= 80) {
-                        cell.classList.add('green');
-                    } else if (accuracy >= 60) {
-                        cell.classList.add('yellow');
-                    } else if (accuracy >= 20) {
-                        cell.classList.add('red')
-                    }
-                });
-            });
         </script>
     {% endif %}
 {% endblock %}

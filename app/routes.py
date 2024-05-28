@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, json
 from app import app
 from flask import request
 from flask_login import current_user, login_user
@@ -85,8 +85,11 @@ def userpage(id_or_name):
 @app.route('/deck/<int:id>')
 def deck(id):
     deck_curr = Deck.query.get_or_404(id)
+    deck_data = ""
+    if current_user.is_authenticated:
+        deck_data = json.dumps(deck_curr.to_dict(current_user.id))
     # дописать для анонимного пользователя
-    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr)
+    return render_template("deck.html", title=f"Deck {deck_curr.name}", deck=deck_curr, deck_data=deck_data)
 
 
 @app.route('/remove_deck/<int:id>')
@@ -430,7 +433,7 @@ def update_deck():
     db.session.add(deck_perf)
     db.session.commit()
     Deck_to = Deck.query.filter_by(id=id).first()
-    Deck_to.review_deck(user_id=current_user.id, performance = deck_perf)
+    Deck_to.review_deck(user_id=current_user.id, performance=deck_perf)
     update_query = user_decks.update().values(percent=percent).where(
         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
     db.session.execute(update_query)

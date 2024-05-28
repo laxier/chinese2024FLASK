@@ -486,7 +486,17 @@
     {% endif %}
 {% endwith %}
 {% block content %}{% endblock %}
-{% block scripts %}{% endblock %}
+<div class="modal fade" id="modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stroke order</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
 </body>
 <footer class="footer mt-auto py-3 d-flex container">
     <div class="container">
@@ -494,7 +504,8 @@
     </div>
 </footer>
 </html>
-
+{% block scripts %}
+{% endblock %}
 <script>
     function getTheme() {
         return localStorage.getItem('theme') || 'light';
@@ -521,5 +532,118 @@
             document.getElementById('darkSwitch').checked = true;
         }
     })
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script>
+    {% if current_user.is_authenticated %}
+        window.addEventListener('DOMContentLoaded', function () {
+            var accuracyCells = document.querySelectorAll('.percent');
+            accuracyCells.forEach(function (cell) {
+                var accuracy = parseInt(cell.textContent);
+                if (accuracy >= 80) {
+                    cell.classList.add('green');
+                } else if (accuracy >= 60) {
+                    cell.classList.add('yellow');
+                } else if (accuracy >= 20) {
+                    cell.classList.add('red')
+                }
+            });
+    {% endif %}
+</script>
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+        const toggleButtons = document.querySelectorAll('.toggle-children');
+        {#console.log(toggleButtons)#}
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const parent = button.parentElement.parentElement;
+                const children = parent.nextElementSibling;
+                children.style.display = children.style.display === 'none' ? 'block' : 'none';
+                button.textContent = children.style.display === 'none' ? '↓' : '↑'
+            });
+        });
 
+        const rowItems = document.querySelectorAll('div.row-item');
+        rowItems.forEach(rowItem => {
+            const chineseElement = rowItem.querySelector('.chinese');
+            if (chineseElement) {
+                rowItem.addEventListener('click', (event) => {
+                    if (!event.target.closest('.toggle-children')) {
+                        const answer = chineseElement.textContent.trim();
+                        showModal(answer);
+                    }
+                });
+            }
+        });
+    });
+
+    function showModal(answer) {
+        var modalBody = document.querySelector('.modal-body');
+        modalBody.style.display = 'flex';
+        modalBody.style.flexDirection = 'column';
+        modalBody.style.flexWrap = 'nowrap';
+        modalBody.style.justifyContent = 'center';
+
+        modalBody.innerHTML = '';
+        const isDarkMode = localStorage.getItem('theme') === 'dark';
+        const strokeColor = isDarkMode ? '#ffffff' : '#333333';
+        const outlineColor = isDarkMode ? '#333333' : '#ffffff';
+
+        var characterContainer = document.createElement('div');
+        characterContainer.classList.add('character-container');
+        modalBody.appendChild(characterContainer);
+
+        var answers = answer.split('');
+        answers.forEach(function (char, index) {
+            var charTargetId = 'character-target-' + (index + 1);
+            var charDiv = document.createElement('div');
+            charDiv.id = charTargetId;
+            charDiv.style.width = '100px';
+            charDiv.style.height = '100px';
+            characterContainer.appendChild(charDiv);
+
+
+            var writer = HanziWriter.create(charTargetId, char, {
+                width: 100,
+                height: 100,
+                padding: 5,
+                strokeAnimationSpeed: 1.5,
+                delayBetweenStrokes: 20,
+                strokeColor: strokeColor,
+                outlineColor: outlineColor,
+            });
+            charDiv.addEventListener('click', function () {
+                writer.animateCharacter();
+            });
+        });
+
+        fetchTranslation(answer).then(function (data) {
+            var pronounciationDiv = document.createElement('div');
+            pronounciationDiv.textContent = data.pronunciation;
+            pronounciationDiv.classList.add('character-container');
+            modalBody.appendChild(pronounciationDiv);
+
+            var translateDiv = document.createElement('div');
+            translateDiv.textContent = data.translation;
+            translateDiv.classList.add('character-container');
+            modalBody.appendChild(translateDiv);
+        });
+
+
+        $('#modal').modal('show');
+    }
+
+    function fetchTranslation(char) {
+        return fetch('/api/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'char': char})
+        })
+            .then(response => response.json())
+            .catch(error => console.error('Ошибка:', error));
+    }
 </script>

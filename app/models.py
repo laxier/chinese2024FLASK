@@ -84,6 +84,15 @@ class Card(db.Model):
         except Exception as e:
             print(f"Failed to fetch data for character {chinese}: {str(e)}")
 
+    def to_dict(self, user_id):
+        return {
+            'id': self.id,
+            'chinese': self.chinese,
+            'transcription': self.transcription,
+            'translation': self.translation,
+            'performance': self.perf_by_user(user_id).to_dict()
+        }
+
     def children_poisk(self):
         log = ""
         if len(self.chinese) > 1:
@@ -144,6 +153,14 @@ class Deck(db.Model):
         self.name = name
         self.creator = creator
         self.users.add(self.creator)
+
+    def to_dict(self, user_id):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'creator_id': self.creator_id,
+            'cards': [card.to_dict(user_id) for card in self.cards]
+        }
 
     def timestamp_created(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
@@ -302,6 +319,20 @@ class CardPerformance(db.Model):
             return round((self.right / self.repetitions) * 100)
         else:
             return 0
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'card_id': self.card_id,
+            'ef_factor': self.ef_factor,
+            'repetitions': self.repetitions,
+            'right': self.right,
+            'wrong': self.wrong,
+            'timestamp': self.timestamp.isoformat(),
+            'edited': self.edited.isoformat(),
+            'next_review_date': self.next_review_date.isoformat()
+        }
 
     def correct(self):
         if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
