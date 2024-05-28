@@ -549,13 +549,14 @@
                 } else if (accuracy >= 20) {
                     cell.classList.add('red')
                 }
-            });
+            })
+        })
     {% endif %}
 </script>
 <script>
     window.addEventListener('DOMContentLoaded', function () {
         const toggleButtons = document.querySelectorAll('.toggle-children');
-        {#console.log(toggleButtons)#}
+        console.log(toggleButtons)
         toggleButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const parent = button.parentElement.parentElement;

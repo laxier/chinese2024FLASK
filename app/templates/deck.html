@@ -164,15 +164,6 @@
 {% block scripts %}
     <script>
         window.addEventListener('DOMContentLoaded', function () {
-            const toggleButtons = document.querySelectorAll('.toggle-children');
-            toggleButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const parent = button.parentElement.parentElement;
-                    const children = parent.nextElementSibling;
-                    children.style.display = children.style.display === 'none' ? 'block' : 'none';
-                    button.textContent = children.style.display === 'none' ? '↓' : '↑'
-                });
-            });
             const percentHeader = document.querySelector('.heading .row-item:nth-child(4)');
             const dateHeader = document.querySelector('.heading .row-item:nth-child(6)');
 
@@ -249,8 +240,8 @@
             tableContainer.textContent = ''; // Clear the existing content
             tableContainer.appendChild(fragment);
 
-            {#isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order#}
-            {#cardRows.forEach(row => tableContainer.appendChild(row));#}
+            isPercentSortAscending = !isPercentSortAscending; // Toggle the sorting order
+            cardRows.forEach(row => tableContainer.appendChild(row));
             isDateSortAscending = !isDateSortAscending; // Toggle the sorting order
         }
 
