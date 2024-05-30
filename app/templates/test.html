@@ -51,7 +51,9 @@
                     </div>
                     {% for card in to_test %}
                         <div class="table-row" card-id="{{ card.id }}">
-                            <div class="row-item chinese">{{ card.chinese }}</div>
+                            <div class="row-item chinese">
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
                             <div class="row-item transcript">{{ card.transcription }}</div>
                             <div class="row-item translations">{{ card.translation }}</div>
                             <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
@@ -66,16 +68,20 @@
                     <div class="row-item">Перевод</div>
                     {% if current_user.is_authenticated %}
                         <div class="row-item">Текущий прогресс</div>
-                        <div class="row-item">Повторение</div>
+                        <div class="row-item date-header">Повторение</div>
                     {% endif %}
                 </div>
                 {% for card in deck.cards %}
-                    <div class="table-row" card-id="{{ card.id }}">
-                        <div class="row-item chinese">{{ card.chinese }}</div>
-                        <div class="row-item transcript">{{ card.transcription }}</div>
-                        <div class="row-item translations">{{ card.translation }}</div>
-                        <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
-                        <div class="row-item percent">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
+                    <div class="card-row">
+                        <div class="table-row" card-id="{{ card.id }}">
+                            <div class="row-item chinese">
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item transcript">{{ card.transcription }}</div>
+                            <div class="row-item translations">{{ card.translation }}</div>
+                            <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            <div class="row-item percent">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
+                        </div>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -85,6 +91,65 @@
 
 
 {% block scripts %}
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            const dateHeader = document.querySelector('.heading .date-header');
+
+            dateHeader.addEventListener('click', sortByDate);
+        });
+
+        let isDateSortAscending = true;
+
+        function sortByDate() {
+            const tableCont = document.querySelector('.table-container');
+            const heading = tableCont.querySelector('.heading');
+            const cardRows = Array.from(tableCont.querySelectorAll('.card-row'));
+            cardRows.sort((a, b) => {
+                const aParentRow = a.querySelector('.table-row');
+                const bParentRow = b.querySelector('.table-row');
+
+                const aCardElement = aParentRow.querySelector('.chinese');
+                const bCardElement = bParentRow.querySelector('.chinese');
+
+                const aCardId = aCardElement.textContent.trim();
+                const bCardId = bCardElement.textContent.trim();
+
+                const deckData = JSON.parse('{{ deck_data|safe }}');
+                const aCard = deckData.cards.find(card => card.chinese === aCardId);
+                const bCard = deckData.cards.find(card => card.chinese === bCardId);
+                const aDate = new Date(aCard.performance.next_review_date);
+                const bDate = new Date(bCard.performance.next_review_date);
+
+                // Sort by next_review_date in ascending order
+                return isDateSortAscending ? bDate - aDate : aDate - bDate;
+            });
+
+            function resetStyles() {
+                const dateHeader = document.querySelector('.date-header');
+
+                dateHeader.classList.remove('ascending', 'descending');
+            }
+
+            const tableContainer = document.querySelector('.table-container');
+            const fragment = document.createDocumentFragment();
+
+            fragment.appendChild(heading);
+
+            cardRows.forEach(cardRow => {
+                fragment.appendChild(cardRow);
+            });
+
+            tableContainer.textContent = ''; // Clear the existing content
+            tableContainer.appendChild(fragment);
+            cardRows.forEach(row => tableContainer.appendChild(row));
+
+            resetStyles();
+            isDateSortAscending = !isDateSortAscending;
+            const dateHeader = document.querySelector('.heading .date-header');
+            dateHeader.classList.remove('ascending', 'descending');
+            dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');
+        }
+    </script>
     <script>
         window.addEventListener("load", function () {
             console.log(document)
@@ -204,13 +269,14 @@
                     cell_data[1]++;
                     countRight++;
                     Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
-                    fetch('/api/update-performance', {
+
+                    console.fetch('/api/update-performance', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            'char': Rows[currentFlashcardIndex].querySelector('.chinese').textContent,
+                            'char': Rows[currentFlashcardIndex].querySelector('.row-item .chinese').textContent,
                             'action': 'correct',
                         }),
                     })

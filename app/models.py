@@ -85,13 +85,27 @@ class Card(db.Model):
             print(f"Failed to fetch data for character {chinese}: {str(e)}")
 
     def to_dict(self, user_id):
-        return {
-            'id': self.id,
-            'chinese': self.chinese,
-            'transcription': self.transcription,
-            'translation': self.translation,
-            'performance': self.perf_by_user(user_id).to_dict()
-        }
+        if self.perf_by_user(user_id):
+            return {
+                'id': self.id,
+                'chinese': self.chinese,
+                'transcription': self.transcription,
+                'translation': self.translation,
+                'performance': self.perf_by_user(user_id).to_dict()
+            }
+        else:
+            return {
+                'id': self.id,
+                'chinese': self.chinese,
+                'transcription': self.transcription,
+                'translation': self.translation,
+                'performance': {
+                    'user_id': user_id,
+                    'card_id': self.id,
+                    'edited': 0,
+                    'next_review_date': 0
+                }
+            }
 
     def children_poisk(self):
         log = ""
