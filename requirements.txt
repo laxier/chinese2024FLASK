@@ -13,3 +13,4 @@ mysql==0.0.3
 mysql-connector-python==8.4.0
 email_validator==2.1.1
 selenium-requests
+psycopg2-binary==2.9.9
