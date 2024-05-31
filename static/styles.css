@@ -256,6 +256,12 @@
     outline: 0;
 }
 
+.flash-container {
+    padding-bottom: 15%;
+    padding-top: 5%;
+    width: 80%;
+}
+
 .dark-theme .form-floating > label {
     transition: opacity .1s ease-in-out, transform .1s ease-in-out;
     color: #d6d6d6 !important;
@@ -450,34 +456,44 @@
 }
 
 @media (max-width: 768px) {
+    .left-header {
+        display: none;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+
+    }
+
+    /*.col-12, .col-md-3 {*/
+    /*    width: auto;*/
+    /*}*/
+    .col-12, .col-md-3, .header .col-md-3, .header .form-check {
+        width: auto !important;
+        margin-bottom: 0 !important;
+    }
+
+    /*.header .form-check {*/
+    /*    margin-bottom: 0!important;*/
+    /*}*/
+
     .container, .container-md, .container-sm {
-        max-width: 96%;
+        max-width: 100%;
+        padding: 0;
+    !important;
     }
 
     .flashcard {
-        height: 400px;
-        width: 80%;
+        justify-content: flex-start;
+        height: 150%;
+        width: 100%;
+        /*height: 100%;*/
     }
 
     .pagination {
         flex-wrap: nowrap;
         overflow-x: auto;
-    }
-
-    .header {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-
-    .nav {
-        flex-direction: column;
-        align-items: flex-start !important;
-        width: 100%;
-        margin-top: 1rem;
-    }
-
-    .nav li {
-        margin-bottom: 0.5rem;
     }
 
     .header .col-md-3 {
@@ -496,37 +512,41 @@
         margin-bottom: 0.5rem;
     }
 
+    .flash-container {
+
+    }
+
     .container {
         width: 100%;
         padding: 0 1rem;
     }
 
-    .footer {
-        text-align: center;
-    }
-
     .cards {
         flex-direction: column;
+        width: 100%;
     }
 
     .card {
         width: 100%;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
 
-    /* Таблица */
     .table-row {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         width: 100%;
-        /*border-bottom: 1px solid #dadada;*/
+        border-bottom: 1px solid #dadada;
+    }
+
+    .chinese {
+        font-size: 30px;
+    }
+
+    .actions {
+        display: none;
     }
 
     .row-item {
-
-    }
-
-    .heading .row-item {
-        display: none;
+        text-align: center;
     }
 }

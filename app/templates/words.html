@@ -25,10 +25,10 @@
                     {% if current_user.is_authenticated %}
                         <div class="row-item">Статистика</div>
                         <div class="row-item">Раунды</div>
-                        <div class="row-item">Действия</div>
+                        <div class="row-item actions">Действия</div>
                         {% if current_user.username == "admin" %}
-                            <div class="row-item">Администрирование</div>
-                            <div class="row-item"></div>
+                            <div class="row-item actions">Администрирование</div>
+                            <div class="row-item actions"></div>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -46,22 +46,22 @@
                             {% if card.perf_by_user(current_user.id) %}
                                 <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                                 <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
-                                <div class="row-item">
+                                <div class="row-item actions">
                                     <a href="{{ url_for('obnulit', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                        class="btn btn-outline-secondary">Обнулить</a>
                                 </div>
                             {% else %}
                                 <div class="row-item">-</div>
                                 <div class="row-item">-</div>
-                                <div class="row-item">-</div>
+                                <div class="row-item actions">-</div>
                             {% endif %}
                         {% endif %}
                         {% if current_user.username == "admin" %}
-                            <div class="row-item">
+                            <div class="row-item actions">
                                 <a href="{{ url_for('delete_card', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                    class="btn btn-primary">Удалить</a>
                             </div>
-                            <div class="row-item">
+                            <div class="row-item actions">
                                 <a href="{{ url_for('get_childs', back='words', id=card.id, search=request.args.get('search', ''), page=request.args.get('page', '')) }}"
                                    class="btn btn-primary">Разложить</a>
                             </div>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
     {% if title %}
@@ -14,7 +13,7 @@
 {{ moment.include_moment() }}
 {{ moment.locale(auto_detect=True) }}
 <header class="header container d-flex flex-wrap align-items-center justify-content-md-between py-3 mb-4">
-    <div class="col-md-3 mb-2 mb-md-0">
+    <div class="col-md-3 mb-2 mb-md-0 left-header">
         <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
             <svg class="bi" width="40" height="32" role="img" aria-label="Bootstrap">
                 <use xlink:href="#bootstrap"></use>
@@ -22,7 +21,7 @@
         </a>
     </div>
 
-    <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+    <ul class="nav col-12 col-md-auto justify-content-center mb-md-0">
         <li><a href="/index" class="nav-link px-2">Дом</a></li>
         {% if current_user.is_authenticated %}
             <li><a href="/user/{{ current_user.id }}" class="nav-link px-2">Мой профиль</a></li>

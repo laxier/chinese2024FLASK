@@ -2,8 +2,10 @@
 
 {% block content %}
     <main class="container">
-        <h1>Hi, {{ current_user.username }}!</h1>
-        <h1>Недавние модули</h1>
+        <div class="container">
+            <h1>Hi, {{ current_user.username }}!</h1>
+            <h1>Недавние модули</h1>
+        </div>
         <div class="container">
             {% if current_user.sort_user_decs_n(4) %}
                 <div class="cards">
@@ -56,7 +58,7 @@
                         <div class="row-item">Произношение</div>
                         <div class="row-item">Перевод</div>
                         <div class="row-item">Статистика</div>
-                        <div class="row-item">Действия</div>
+                        <div class="row-item actions">Действия</div>
                     </div>
                     {% for performance in perform %}
                         <div class="table-row">
@@ -66,7 +68,7 @@
                             <div class="row-item">{{ performance.card.transcription }}</div>
                             <div class="row-item">{{ performance.card.translation }}</div>
                             <div class="row-item percent">{{ performance.accuracy_percentage }}%</div>
-                            <div class="row-item">
+                            <div class="row-item actions">
                                 <a href="/index/null/{{ performance.id }}"
                                    class="btn btn-outline-secondary">Обнулить</a>
                             </div>
