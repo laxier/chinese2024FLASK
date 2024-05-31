@@ -523,12 +523,7 @@
     }
 
     .row-item {
-        display: flex;
-        flex: 1;
-        font-size: 40px;
-        padding: 8px 0;
-        justify-content: center;
-        transition: all 0.15s ease-in-out;
+
     }
 
     .heading .row-item {
