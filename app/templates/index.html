@@ -46,10 +46,10 @@
                 <p>Пока ничего нет</p>
             {% endif %}
         </div>
+        <div class="container">
+            <h1>Недавние слова</h1>
+            {% if current_user.card_performance %}
 
-        <h1>Недавние слова</h1>
-        {% if current_user.card_performance %}
-            <div class="container">
                 <div class="table-container">
                     <div class="table-row heading">
                         <div class="row-item">Слово</div>
@@ -73,10 +73,11 @@
                         </div>
                     {% endfor %}
                 </div>
-            </div>
-        {% else %}
-            <div class="container"><p>Пока ничего нет</p></div>
-        {% endif %}
+
+            {% else %}
+                <p>Пока ничего нет</p>
+            {% endif %}
+        </div>
     </main>
 {% endblock %}
 
