@@ -477,11 +477,9 @@
     /*.header .form-check {*/
     /*    margin-bottom: 0!important;*/
     /*}*/
-
     .container, .container-md, .container-sm {
         max-width: 100%;
-        padding: 0;
-    !important;
+        padding: 0 !important;
     }
 
     .flashcard {

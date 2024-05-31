@@ -92,63 +92,65 @@
 
 {% block scripts %}
     <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            const dateHeader = document.querySelector('.heading .date-header');
+        {% if current_user.is_authenticated %}
+            window.addEventListener('DOMContentLoaded', function () {
+                const dateHeader = document.querySelector('.heading .date-header');
 
-            dateHeader.addEventListener('click', sortByDate);
-        });
-
-        let isDateSortAscending = true;
-
-        function sortByDate() {
-            const tableCont = document.querySelector('.table-container');
-            const heading = tableCont.querySelector('.heading');
-            const cardRows = Array.from(tableCont.querySelectorAll('.card-row'));
-            cardRows.sort((a, b) => {
-                const aParentRow = a.querySelector('.table-row');
-                const bParentRow = b.querySelector('.table-row');
-
-                const aCardElement = aParentRow.querySelector('.chinese');
-                const bCardElement = bParentRow.querySelector('.chinese');
-
-                const aCardId = aCardElement.textContent.trim();
-                const bCardId = bCardElement.textContent.trim();
-
-                const deckData = JSON.parse('{{ deck_data|safe }}');
-                const aCard = deckData.cards.find(card => card.chinese === aCardId);
-                const bCard = deckData.cards.find(card => card.chinese === bCardId);
-                const aDate = new Date(aCard.performance.next_review_date);
-                const bDate = new Date(bCard.performance.next_review_date);
-
-                // Sort by next_review_date in ascending order
-                return isDateSortAscending ? bDate - aDate : aDate - bDate;
+                dateHeader.addEventListener('click', sortByDate);
             });
 
-            function resetStyles() {
-                const dateHeader = document.querySelector('.date-header');
+            let isDateSortAscending = true;
 
+            function sortByDate() {
+                const tableCont = document.querySelector('.table-container');
+                const heading = tableCont.querySelector('.heading');
+                const cardRows = Array.from(tableCont.querySelectorAll('.card-row'));
+                cardRows.sort((a, b) => {
+                    const aParentRow = a.querySelector('.table-row');
+                    const bParentRow = b.querySelector('.table-row');
+
+                    const aCardElement = aParentRow.querySelector('.chinese');
+                    const bCardElement = bParentRow.querySelector('.chinese');
+
+                    const aCardId = aCardElement.textContent.trim();
+                    const bCardId = bCardElement.textContent.trim();
+
+                    const deckData = JSON.parse('{{ deck_data|safe }}');
+                    const aCard = deckData.cards.find(card => card.chinese === aCardId);
+                    const bCard = deckData.cards.find(card => card.chinese === bCardId);
+                    const aDate = new Date(aCard.performance.next_review_date);
+                    const bDate = new Date(bCard.performance.next_review_date);
+
+                    // Sort by next_review_date in ascending order
+                    return isDateSortAscending ? bDate - aDate : aDate - bDate;
+                });
+
+                function resetStyles() {
+                    const dateHeader = document.querySelector('.date-header');
+
+                    dateHeader.classList.remove('ascending', 'descending');
+                }
+
+                const tableContainer = document.querySelector('.table-container');
+                const fragment = document.createDocumentFragment();
+
+                fragment.appendChild(heading);
+
+                cardRows.forEach(cardRow => {
+                    fragment.appendChild(cardRow);
+                });
+
+                tableContainer.textContent = ''; // Clear the existing content
+                tableContainer.appendChild(fragment);
+                cardRows.forEach(row => tableContainer.appendChild(row));
+
+                resetStyles();
+                isDateSortAscending = !isDateSortAscending;
+                const dateHeader = document.querySelector('.heading .date-header');
                 dateHeader.classList.remove('ascending', 'descending');
+                dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');
             }
-
-            const tableContainer = document.querySelector('.table-container');
-            const fragment = document.createDocumentFragment();
-
-            fragment.appendChild(heading);
-
-            cardRows.forEach(cardRow => {
-                fragment.appendChild(cardRow);
-            });
-
-            tableContainer.textContent = ''; // Clear the existing content
-            tableContainer.appendChild(fragment);
-            cardRows.forEach(row => tableContainer.appendChild(row));
-
-            resetStyles();
-            isDateSortAscending = !isDateSortAscending;
-            const dateHeader = document.querySelector('.heading .date-header');
-            dateHeader.classList.remove('ascending', 'descending');
-            dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');
-        }
+        {% endif %}
     </script>
     <script>
         window.addEventListener("load", function () {
