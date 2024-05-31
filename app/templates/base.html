@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
     {% if title %}
         <title>{{ title }} - 汉语中心</title>
@@ -7,10 +9,7 @@
         <title>汉语中心</title>
     {% endif %}
 </head>
-
 {{ bootstrap.load_css() }}
-{% block styles %}
-{% endblock %}
 <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
 {{ moment.include_moment() }}
 {{ moment.locale(auto_detect=True) }}
