@@ -451,7 +451,7 @@
 
 @media (max-width: 768px) {
     .container, .container-md, .container-sm {
-        max-width: 96%;
+        max-width: 96% !important;
     }
 
     .flashcard {
