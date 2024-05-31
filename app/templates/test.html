@@ -270,7 +270,7 @@
                     countRight++;
                     Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
 
-                    console.fetch('/api/update-performance', {
+                    fetch('/api/update-performance', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -309,7 +309,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            'char': Rows[currentFlashcardIndex].querySelector('.chinese').textContent,
+                            'char': Rows[currentFlashcardIndex].querySelector('.row-item .chinese').textContent,
                             'action': 'incorrect',
                         }),
                     })
