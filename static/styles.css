@@ -32,11 +32,11 @@
     box-shadow: 0px 1px 4px rgba(0, 0, 0, .08);
 }
 
-/*.cards {*/
-/*    display: flex;*/
-/*    width: 95%;*/
-/*    margin: 0 auto;*/
-/*}*/
+.cards {
+    display: flex;
+    width: 95%;
+    margin: 0 auto;
+}
 
 .progress-slim {
     height: 3px;
@@ -107,12 +107,12 @@
     background-color: #F0F0F0;
 }
 
-/*.table-row {*/
-/*    display: flex;*/
-/*    flex-flow: row nowrap;*/
-/*    width: 100%;*/
-/*    border-bottom: 1px solid #dadada;*/
-/*}*/
+.table-row {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
+    border-bottom: 1px solid #dadada;
+}
 
 .heading {
     background-color: #ececec;
@@ -120,15 +120,15 @@
     font-weight: bold;
 }
 
-/*.row-item {*/
-/*    display: flex;*/
-/*    flex: 1;*/
-/*    font-size: 14px;*/
-/*    padding: 8px 0;*/
-/*    justify-content: center;*/
-/*    align-items: center;*/
-/*    transition: all 0.15s ease-in-out;*/
-/*}*/
+.row-item {
+    display: flex;
+    flex: 1;
+    font-size: 14px;
+    padding: 8px 0;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.15s ease-in-out;
+}
 
 .row-item:hover {
     cursor: pointer;
@@ -449,7 +449,11 @@
     content: "▼";
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
+    .container, .container-md, .container-sm {
+        max-width: 96%;
+    }
+
     .flashcard {
         height: 400px;
         width: 80%;
