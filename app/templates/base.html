@@ -455,6 +455,57 @@
         content: "▼";
     }
 
+    @media (max-width: 767px) {
+        .main-container,
+        .table-container,
+        .cards,
+        .bottom-element {
+            width: 100%;
+        }
+
+        .cards {
+            flex-direction: column;
+        }
+
+        .card {
+            flex: 1 1 auto;
+        }
+
+        .table-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+
+        .table-row {
+            display: contents;
+        }
+
+        .row-item {
+            display: block;
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #dadada;
+        }
+
+        .row-item:last-child {
+            border-bottom: none;
+        }
+
+        .heading {
+            display: none;
+        }
+
+        .flashcard {
+            height: 400px;
+            width: 80%;
+        }
+
+        .pagination {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+    }
+
     {% block styles %}
     {% endblock %}
 </style>
