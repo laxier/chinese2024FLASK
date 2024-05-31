@@ -24,21 +24,19 @@
     <ul class="nav col-12 col-md-auto justify-content-center mb-md-0">
         <li><a href="/index" class="nav-link px-2">Дом</a></li>
         {% if current_user.is_authenticated %}
-            <li><a href="/user/{{ current_user.id }}" class="nav-link px-2">Мой профиль</a></li>
+            <li><a href="/user/{{ current_user.id }}" class="nav-link px-2">Профиль</a></li>
         {% endif %}
         <li><a href="/words" class="nav-link px-2 link-dark">Слова</a></li>
     </ul>
     <div class="col-md-3 text-end" style="display: flex; flex-direction: row; align-items: center;">
-        <div class="form-check form-switch" style="padding-right: 1em;">
+        <div class="form-check form-switch text-center">
             <input class="form-check-input" type="checkbox" id="darkSwitch" onchange="toggleTheme()" data-theme-toggle>
             <label class="form-check-label" for="darkSwitch">Темная тема</label>
         </div>
         {% if current_user.is_anonymous %}
-            <a class="btn btn-outline-primary me-2" href="{{ url_for('login') }}">Login</a>
+            <a class="btn btn-outline-primary me-2" href="{{ url_for('login') }}">login</a>
         {% else %}
-            <a class="btn btn-outline-primary me-2" href="{{ url_for('logout') }}"> {{ current_user.username }}
-                <br>
-                Log-out</a>
+            <a class="btn btn-outline-primary me-2" href="{{ url_for('logout') }}">logout</a>
         {% endif %}
     </div>
 </header>
