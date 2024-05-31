@@ -384,11 +384,6 @@
                 });
 
                 fetchTranslation(answer).then(function (data) {
-                    var pronounciationDiv = document.createElement('div');
-                    pronounciationDiv.textContent = data.pronunciation;
-                    pronounciationDiv.classList.add('character-container');
-                    modalBody.appendChild(pronounciationDiv);
-
                     var translateDiv = document.createElement('div');
                     translateDiv.textContent = data.translation;
                     translateDiv.classList.add('character-container');
