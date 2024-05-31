@@ -480,7 +480,7 @@
     /*}*/
     .container, .container-md, .container-sm {
         max-width: 100%;
-        padding: 0.25rem !important;
+        padding: 0.25rem 0.5rem !important;
     }
 
     .flashcard {
