@@ -4,8 +4,6 @@
     <main class="container">
         <div class="container">
             <h1>{{ user.username }}</h1>
-        </div>
-        <div class="container">
             <div class="cards">
                 {% if user.decks %}
                     {% for deck in user.sort_user_decs() %}

@@ -5,8 +5,6 @@
         <div class="container">
             <h1>Hi, {{ current_user.username }}!</h1>
             <h1>Недавние модули</h1>
-        </div>
-        <div class="container">
             {% if current_user.sort_user_decs_n(4) %}
                 <div class="cards">
                     {% for deck in current_user.sort_user_decs_n(4) %}

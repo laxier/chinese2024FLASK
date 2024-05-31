@@ -4,8 +4,6 @@
         <div class="container">
             <h1>Deck {{ deck.name }}!</h1>
             <h6>by <a href="/user/{{ deck.creator.id }}">{{ deck.creator.username }}</a></h6>
-        </div>
-        <div class="container">
             {% if current_user.is_authenticated %}
                 {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
                     <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
