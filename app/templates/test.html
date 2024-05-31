@@ -56,7 +56,9 @@
                             </div>
                             <div class="row-item transcript">{{ card.transcription }}</div>
                             <div class="row-item translations">{{ card.translation }}</div>
-                            <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            {% if current_user.is_authenticated %}
+                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>

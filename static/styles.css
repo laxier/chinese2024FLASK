@@ -78,6 +78,7 @@
 
 .card {
     flex: 0 1 calc(25% - 1em);
+    justify-content: space-between;
     box-sizing: border-box;
     margin: .25rem;
 }
@@ -160,7 +161,7 @@
     margin-right: auto;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     height: 300px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -546,5 +547,9 @@
 
     .row-item {
         text-align: center;
+    }
+
+    .toggle-children {
+        display: none;
     }
 }

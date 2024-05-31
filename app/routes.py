@@ -373,7 +373,7 @@ def test(id):
     if current_user.is_authenticated:
         to_test = deck_curr.sort_perf_by_user(current_user.id)
     else:
-        to_test = deck_curr
+        to_test = deck_curr.cards
     return render_template("test.html", title=f"Deck {deck_curr.name}",
                            title2="Тест", deck=deck_curr,
                            to_test=to_test, test=True)
