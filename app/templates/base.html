@@ -102,6 +102,24 @@
         }
     })
 </script>
+<script>
+    let prevScrollPos = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        const currentScrollPos = window.scrollY;
+
+        if (window.innerWidth <= 768) {
+            if (prevScrollPos > currentScrollPos) {
+                header.classList.remove('hide');
+            } else {
+                header.classList.add('hide');
+            }
+
+            prevScrollPos = currentScrollPos;
+        }
+    });
+</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>

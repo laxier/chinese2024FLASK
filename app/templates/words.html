@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <main class="container">
+    <main>
         <div class="container">
             {% if current_user.is_authenticated %}
                 <h1>Hi, {{ current_user.username }}!</h1>
