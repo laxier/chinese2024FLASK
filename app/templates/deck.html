@@ -1,164 +1,162 @@
 {% extends "base.html" %}
 {% block content %}
-    <main>
-        <div class="container">
-            <h1>Deck {{ deck.name }}!</h1>
-            <h6>by <a href="/user/{{ deck.creator.id }}">{{ deck.creator.username }}</a></h6>
-            {% if current_user.is_authenticated %}
-                {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
-                    <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
-                {% endif %}
-                {% if deck in current_user.decks %}
-                    <a href="/review/{{ deck.id }}" class="btn btn-outline-secondary">Повторить</a>
-                    <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
-                {% else %}
-                    <a href="/add_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
-                {% endif %}
-            {% else %}
-                <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
+    <div class="container">
+        <h1>Deck {{ deck.name }}!</h1>
+        <h6>by <a href="/user/{{ deck.creator.id }}">{{ deck.creator.username }}</a></h6>
+        {% if current_user.is_authenticated %}
+            {% if current_user.id == deck.creator_id or current_user.username == 'admin' %}
+                <a href="/edit_deck/{{ deck.id }}" class="btn btn-outline-secondary">Редактировать</a>
             {% endif %}
-        </div>
-        {% if deck.cards %}
-            {% if current_user.is_authenticated %}
-                <div class="container">
-                    <div id="chart-container">
-                        <canvas id="myChart"></canvas>
-                    </div>
-                    <div id="info-container"></div>
-                </div>
-                <div class="table-container">
-                    <div class="table-row heading">
-                        <div class="row-item">Слово</div>
-                        <div class="row-item">Произношение</div>
-                        <div class="row-item">Перевод</div>
-                        <div class="row-item percent-header">Статистика</div>
-                        <div class="row-item">Раунды</div>
-                        <div class="row-item date-header">Повторение</div>
-                    </div>
-                    {% for card in deck.cards %}
-                        <div class="card-row">
-                            <div class="table-row parent">
-                                <div class="row-item">
-                                    {% if card.children.count() > 0 %}
-                                        <button class="toggle-children">↓</button>
-                                    {% endif %}
-                                    <div class="chinese">{{ card.chinese }}</div>
-                                </div>
-                                <div class="row-item">{{ card.transcription }}</div>
-                                <div class="row-item">{{ card.translation }}</div>
-                                <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
-                                <div class="row-item">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
-                            </div>
-                            {% if card.children.count() > 0 %}
-                                <div class="children" style="display: none;">
-                                    {% for child in card.children.order_by() %}
-                                        <div class="table-row">
-                                            <div class="row-item">
-                                                {% if child.children.count() > 0 %}
-                                                    <button class="toggle-children">↓</button>
-                                                {% endif %}
-                                                -->
-                                            </div>
-                                            <div class="row-item">
-                                                <div class="chinese">{{ child.chinese }}</div>
-                                                {{ child.transcription }}
-                                            </div>
-                                            <div class="row-item">{{ child.translation }}</div>
-                                            <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                            <div class="row-item"></div>
-                                        </div>
-                                        {% if card.children.count() > 0 %}
-                                            <div class="children2" style="display: none;">
-                                                {% for child2 in child.children.order_by() %}
-                                                    <div class="table-row">
-                                                        <div class="row-item">--></div>
-                                                        <div class="row-item">
-                                                            <div class="chinese">{{ child2.chinese }}</div>
-                                                            {{ child2.transcription }}</div>
-                                                        <div class="row-item">{{ child2.translation }}</div>
-                                                        <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
-                                                        <div class="row-item"></div>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
+            {% if deck in current_user.decks %}
+                <a href="/review/{{ deck.id }}" class="btn btn-outline-secondary">Повторить</a>
+                <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
             {% else %}
-                <div class="table-container">
-                    <div class="table-row heading">
-                        <div class="row-item">Слово</div>
-                        <div class="row-item">Произношение</div>
-                        <div class="row-item">Перевод</div>
-                    </div>
-                    {% for card in deck.cards %}
-                        <div class="card-row">
-                            <div class="table-row parent">
-                                <div class="row-item">
-                                    {% if card.children.count() > 0 %}
-                                        <button class="toggle-children">↓</button>
-                                    {% endif %}
-                                    <div class="chinese"> {{ card.chinese }}</div>
-                                </div>
-                                <div class="row-item">{{ card.transcription }}</div>
-                                <div class="row-item">{{ card.translation }}</div>
-                            </div>
-                            {% if card.children.count() > 0 %}
-                                <div class="children" style="display: none;">
-                                    {% for child in card.children.order_by() %}
-                                        <div class="table-row">
-                                            <div class="row-item">--></div>
-                                            <div class="row-item">
-                                                {% if child.children.count() > 0 %}
-                                                    <button class="toggle-children">↓</button>
-                                                {% endif %}
-                                                <div class="chinese">{{ child.chinese }}</div>
-                                                {{ child.transcription }}
-                                            </div>
-                                            <div class="row-item">{{ child.translation }}</div>
-                                        </div>
-                                        {% if child.children.count() > 0 %}
-                                            <div class="children2" style="display: none;">
-                                                {% for child2 in child.children.order_by() %}
-                                                    <div class="table-row">
-                                                        <div class="row-item">--></div>
-                                                        <div class="row-item">
-                                                            <div class="chinese">{{ child2.chinese }}</div>
-                                                            {{ child2.transcription }}</div>
-                                                        <div class="row-item">{{ child2.translation }}</div>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
+                <a href="/add_deck/{{ deck.id }}" class="btn btn-outline-secondary">Добавить</a>
             {% endif %}
         {% else %}
-            <p>no cards yet</p>
+            <a href="/test/{{ deck.id }}" class="btn btn-outline-secondary">Тест</a>
         {% endif %}
-
-
-        <div class="modal fade" id="modal">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Stroke order</h5>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body"></div>
+    </div>
+    {% if deck.cards %}
+        {% if current_user.is_authenticated %}
+            <div class="container">
+                <div id="chart-container">
+                    <canvas id="myChart"></canvas>
                 </div>
+                <div id="info-container"></div>
+            </div>
+            <div class="table-container">
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Произношение</div>
+                    <div class="row-item">Перевод</div>
+                    <div class="row-item percent-header">Статистика</div>
+                    <div class="row-item">Раунды</div>
+                    <div class="row-item date-header">Повторение</div>
+                </div>
+                {% for card in deck.cards %}
+                    <div class="card-row">
+                        <div class="table-row parent">
+                            <div class="row-item">
+                                {% if card.children.count() > 0 %}
+                                    <button class="toggle-children">↓</button>
+                                {% endif %}
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item">{{ card.transcription }}</div>
+                            <div class="row-item">{{ card.translation }}</div>
+                            <div class="row-item percent">{{ card.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                            <div class="row-item">{{ card.perf_by_user(current_user.id) }}</div>
+                            <div class="row-item">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
+                        </div>
+                        {% if card.children.count() > 0 %}
+                            <div class="children" style="display: none;">
+                                {% for child in card.children.order_by() %}
+                                    <div class="table-row">
+                                        <div class="row-item">
+                                            {% if child.children.count() > 0 %}
+                                                <button class="toggle-children">↓</button>
+                                            {% endif %}
+                                            -->
+                                        </div>
+                                        <div class="row-item">
+                                            <div class="chinese">{{ child.chinese }}</div>
+                                            {{ child.transcription }}
+                                        </div>
+                                        <div class="row-item">{{ child.translation }}</div>
+                                        <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                        <div class="row-item"></div>
+                                    </div>
+                                    {% if card.children.count() > 0 %}
+                                        <div class="children2" style="display: none;">
+                                            {% for child2 in child.children.order_by() %}
+                                                <div class="table-row">
+                                                    <div class="row-item">--></div>
+                                                    <div class="row-item">
+                                                        <div class="chinese">{{ child2.chinese }}</div>
+                                                        {{ child2.transcription }}</div>
+                                                    <div class="row-item">{{ child2.translation }}</div>
+                                                    <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                                    <div class="row-item"></div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="table-container">
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Произношение</div>
+                    <div class="row-item">Перевод</div>
+                </div>
+                {% for card in deck.cards %}
+                    <div class="card-row">
+                        <div class="table-row parent">
+                            <div class="row-item">
+                                {% if card.children.count() > 0 %}
+                                    <button class="toggle-children">↓</button>
+                                {% endif %}
+                                <div class="chinese"> {{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item">{{ card.transcription }}</div>
+                            <div class="row-item">{{ card.translation }}</div>
+                        </div>
+                        {% if card.children.count() > 0 %}
+                            <div class="children" style="display: none;">
+                                {% for child in card.children.order_by() %}
+                                    <div class="table-row">
+                                        <div class="row-item">--></div>
+                                        <div class="row-item">
+                                            {% if child.children.count() > 0 %}
+                                                <button class="toggle-children">↓</button>
+                                            {% endif %}
+                                            <div class="chinese">{{ child.chinese }}</div>
+                                            {{ child.transcription }}
+                                        </div>
+                                        <div class="row-item">{{ child.translation }}</div>
+                                    </div>
+                                    {% if child.children.count() > 0 %}
+                                        <div class="children2" style="display: none;">
+                                            {% for child2 in child.children.order_by() %}
+                                                <div class="table-row">
+                                                    <div class="row-item">--></div>
+                                                    <div class="row-item">
+                                                        <div class="chinese">{{ child2.chinese }}</div>
+                                                        {{ child2.transcription }}</div>
+                                                    <div class="row-item">{{ child2.translation }}</div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p>no cards yet</p>
+    {% endif %}
+
+
+    <div class="modal fade" id="modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stroke order</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body"></div>
             </div>
         </div>
-    </main>
+    </div>
 {% endblock %}
 
 {% block scripts %}

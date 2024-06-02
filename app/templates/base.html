@@ -41,32 +41,33 @@
     </div>
 </header>
 
-
-<body class="d-flex flex-column h-100">
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <div class="container">
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-{% endwith %}
-{% block content %}{% endblock %}
-<div class="modal fade" id="modal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Stroke order</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+<main>
+    <body class="d-flex flex-column h-100">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="container">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
             </div>
-            <div class="modal-body"></div>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+    <div class="modal fade" id="modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Stroke order</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body"></div>
+            </div>
         </div>
     </div>
-</div>
-</body>
+    </body>
+</main>
 <footer class="footer mt-auto py-3 d-flex container">
     <div class="container">
         <span>Тимофеев Кирилл, 2024</span>

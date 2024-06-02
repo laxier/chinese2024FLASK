@@ -478,6 +478,42 @@ main {
     content: "▼";
 }
 
+@media (min-width: 992px) {
+    main {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 768px) {
+    main {
+        max-width: 720px;
+    }
+}
+
+@media (min-width: 576px) {
+    main {
+        max-width: 540px;
+    }
+}
+
+@media (min-width: 992px) {
+    main {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 1200px) {
+    main {
+        max-width: 1140px;
+    }
+}
+
+@media (min-width: 1400px) {
+    main {
+        max-width: 1320px;
+    }
+}
+
 @media (max-width: 768px) {
     .mb-4 {
         margin-bottom: 0.25rem !important;
@@ -493,7 +529,7 @@ main {
         justify-content: space-between;
         position: fixed;
         transition: transform 0.3s ease-in-out;
-        z-index:1000;
+        z-index: 1000;
     }
 
 
