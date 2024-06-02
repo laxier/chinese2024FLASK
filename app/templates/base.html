@@ -105,6 +105,8 @@
 </script>
 <script>
     let prevScrollPos = window.scrollY;
+    let isScrollingUp = false;
+    let hideHeaderTimeout;
 
     window.addEventListener('scroll', () => {
         const header = document.querySelector('header');
@@ -112,12 +114,29 @@
 
         if (window.innerWidth <= 768) {
             if (prevScrollPos > currentScrollPos) {
+                // Прокрутка вверх
+                isScrollingUp = true;
                 header.classList.remove('hide');
-            } else {
-                header.classList.add('hide');
+                clearTimeout(hideHeaderTimeout);
+            } else if (currentScrollPos > 0) {
+                // Прокрутка вниз
+                isScrollingUp = false;
+                hideHeaderTimeout = setTimeout(() => {
+                    header.classList.add('hide');
+                }, 300); // Задержка перед скрытием хедера
             }
 
             prevScrollPos = currentScrollPos;
+        } else {
+            // На больших экранах всегда показывать хедер
+            header.classList.remove('hide');
+        }
+
+        // Если пользователь достиг верха страницы при прокрутке вверх
+        if (currentScrollPos === 0 && isScrollingUp) {
+            header.classList.remove('hide');
+            isScrollingUp = false;
+            clearTimeout(hideHeaderTimeout);
         }
     });
 </script>
