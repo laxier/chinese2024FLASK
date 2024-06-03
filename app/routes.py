@@ -428,7 +428,7 @@ def update_deck():
     if len(incorrect) == 1:
         incorrect = str(incorrect[0]).strip()
     else:
-        incorrect = ', '.join(str(card) for card in incorrect)
+        incorrect = ', '.join(str(card).strip() for card in incorrect)
     # print(incorrect)
     if percent is None:
         return jsonify({'error': 'Missing percent'})
