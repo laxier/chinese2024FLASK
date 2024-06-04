@@ -1,91 +1,95 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>{{ title2 }} Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
-    {% if to_test %}
-        <div class="container flash-container">
-            <div id="flashcard" class="flashcard">
-                <div class="card-header" style="width:100%">
-                    <div class="progress">
-                        <div id="quiz-progress" class="progress-bar bg-info" role="progressbar"></div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="front">
-                        <h6 id="back-pronunciation">mama</h6>
-                        <h6 class="card-title" id="back-translation">сущ. мама</h6>
-                    </div>
-                    <div class="back" style="display: none;">
-                        <h5 id="front-character"
-                            style="font-family: KaiTi, STKaiti, DFKai-SB, BiauKai, Arial !important; font-size:80px;">
-                            妈妈</h5>
-                    </div>
-                    <div class="button-container">
-                        <button id="quiz-right" class="btn btn-outline-secondary">Верно</button>
-                        <button id="quiz-wrong" class="btn btn-outline-secondary"> Неверно</button>
-                    </div>
-                    <div class="button-container">
-                        <button id="quiz-restart" class="btn btn-outline-secondary">
-                            Перезапустить тест
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div>
-            Пока нет слов для повторения
-        </div>
-    {% endif %}
     <div class="container">
-    {% if to_test %}
-        <div class="table-container">
-            <div class="table-row heading">
-                <div class="row-item">Слово</div>
-                <div class="row-item">Произношение</div>
-                <div class="row-item">Перевод</div>
-                {% if current_user.is_authenticated %}
-                    <div class="row-item">Текущий прогресс</div>
-                {% endif %}
-            </div>
-            {% for card in to_test %}
-                <div class="table-row" card-id="{{ card.id }}">
-                    <div class="row-item chinese">
-                        <div class="chinese">{{ card.chinese }}</div>
+        <h1>{{ title2 }} Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>
+        {% if to_test %}
+            <div class="container flash-container">
+                <div id="flashcard" class="flashcard">
+                    <div class="card-header" style="width:100%">
+                        <div class="progress">
+                            <div id="quiz-progress" class="progress-bar bg-info" role="progressbar"></div>
+                        </div>
                     </div>
-                    <div class="row-item transcript">{{ card.transcription }}</div>
-                    <div class="row-item translations">{{ card.translation }}</div>
+                    <div class="card-body">
+                        <div class="front">
+                            <h6 id="back-pronunciation">mama</h6>
+                            <h6 class="card-title" id="back-translation">сущ. мама</h6>
+                        </div>
+                        <div class="back" style="display: none;">
+                            <h5 id="front-character"
+                                style="font-family: KaiTi, STKaiti, DFKai-SB, BiauKai, Arial !important; font-size:80px;">
+                                妈妈</h5>
+                        </div>
+                        <div class="button-container">
+                            <button id="quiz-right" class="btn btn-outline-secondary">Верно</button>
+                            <button id="quiz-wrong" class="btn btn-outline-secondary"> Неверно</button>
+                        </div>
+                        <div class="button-container">
+                            <button id="quiz-restart" class="btn btn-outline-secondary">
+                                Перезапустить тест
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                Пока нет слов для повторения
+            </div>
+        {% endif %}
+        <div class="container">
+            {% if to_test %}
+                <div class="table-container">
+                    <div class="table-row heading">
+                        <div class="row-item">Слово</div>
+                        <div class="row-item">Произношение</div>
+                        <div class="row-item">Перевод</div>
+                        {% if current_user.is_authenticated %}
+                            <div class="row-item">Текущий прогресс</div>
+                        {% endif %}
+                    </div>
+                    {% for card in to_test %}
+                        <div class="table-row" card-id="{{ card.id }}">
+                            <div class="row-item chinese">
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item transcript">{{ card.transcription }}</div>
+                            <div class="row-item translations">{{ card.translation }}</div>
+                            {% if current_user.is_authenticated %}
+                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="table-container">
+                <div class="table-row heading">
+                    <div class="row-item">Слово</div>
+                    <div class="row-item">Произношение</div>
+                    <div class="row-item">Перевод</div>
                     {% if current_user.is_authenticated %}
-                        <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                        <div class="row-item">Текущий прогресс</div>
+                        <div class="row-item date-header">Повторение</div>
                     {% endif %}
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="table-container">
-        <div class="table-row heading">
-            <div class="row-item">Слово</div>
-            <div class="row-item">Произношение</div>
-            <div class="row-item">Перевод</div>
-            {% if current_user.is_authenticated %}
-                <div class="row-item">Текущий прогресс</div>
-                <div class="row-item date-header">Повторение</div>
-            {% endif %}
-        </div>
-        {% for card in deck.cards %}
-            <div class="card-row">
-                <div class="table-row" card-id="{{ card.id }}">
-                    <div class="row-item chinese">
-                        <div class="chinese">{{ card.chinese }}</div>
+                {% for card in deck.cards %}
+                    <div class="card-row">
+                        <div class="table-row" card-id="{{ card.id }}">
+                            <div class="row-item chinese">
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item transcript">{{ card.transcription }}</div>
+                            <div class="row-item translations">{{ card.translation }}</div>
+                            <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            <div class="row-item percent">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
+                        </div>
                     </div>
-                    <div class="row-item transcript">{{ card.transcription }}</div>
-                    <div class="row-item translations">{{ card.translation }}</div>
-                    <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
-                    <div class="row-item percent">{{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}</div>
-                </div>
+                {% endfor %}
+            {% endif %}
             </div>
-        {% endfor %}
-    {% endif %}
+        </div>
+    </div>
 {% endblock %}
 
 

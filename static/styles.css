@@ -601,6 +601,9 @@ main {
     .progress-slim {
         height: 3px;
     }
+    .flash-container{
+        margin-bottom: 200px;
+    }
 
     .flashcard {
         /*justify-content: flex-start;*/

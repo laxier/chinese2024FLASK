@@ -354,8 +354,8 @@ class CardPerformance(db.Model):
         else:
             self.repetitions += 1
             self.right += 1
+            quality = 4
 
-            quality = 5
             spaced_repetition = SpacedRepetition(self.ef_factor)
             interval = spaced_repetition.calculate_interval(self.repetitions, quality)
             self.ef_factor = spaced_repetition.ef_factor
