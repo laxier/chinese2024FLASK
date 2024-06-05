@@ -23,7 +23,7 @@ def searchWord(word):
         rows = soup.find_all('tr')
         cells = rows[0].find_all('div')  # Again, assuming the text is in table data cells
         if cells:
-            return cells[1].text[1::], cells[2].text
+            return cells[1].text[1::], cells[2].text.replace("\"", "")
 
 
 from selenium import webdriver
