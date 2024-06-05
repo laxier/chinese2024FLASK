@@ -115,7 +115,7 @@ def edit_deck(id):
     if form.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
             card = Card.query.filter_by(
-                chinese=form.char.data.replace("\"", "").replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "")).first()
+                chinese=form.char.data.replace('"', '').replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "")).first()
             if card:
                 if card in to_edit.cards:
                     flash('Card already exists')
