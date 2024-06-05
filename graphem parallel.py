@@ -7,7 +7,7 @@ from tqdm import tqdm
 # requires selenium==4.20.0
 MAX_THREADS = 5
 semaphore = threading.Semaphore(MAX_THREADS)
-id = 24
+id = 16
 
 def process_element(element):
     with app.app_context():
