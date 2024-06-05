@@ -124,7 +124,7 @@ def edit_deck(id):
                     to_edit.cards.add(card)
                     flash('Card added')
             else:
-                card = Card(chinese=form.char.data.replace("\"", "").replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", ""))
+                card = Card(chinese=form.char.data.replace('"', '').replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", ""))
                 db.session.add(card)
                 card.create_rel(user=current_user)
                 to_edit.cards.add(card)
@@ -147,7 +147,7 @@ def edit_deck(id):
             return "Action is not allowed"
     if form3.validate_on_submit():
         if to_edit.creator_id == current_user.id or current_user.username == 'admin':
-            words = form3.text.data.replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "").split("\r\n")
+            words = form3.text.data.replace('"', '').replace(" ", "").replace(u"\u00A0", "").replace(u"\u200b", "").split("\r\n")
             dictionary = dict()
             for word in words:
                 try:
