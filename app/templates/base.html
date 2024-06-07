@@ -26,7 +26,23 @@
         {% if current_user.is_authenticated %}
             <li><a href="/user/{{ current_user.id }}" class="nav-link px-2">Профиль</a></li>
         {% endif %}
-        <li><a href="/words" class="nav-link px-2 link-dark">Слова</a></li>
+
+        {% if current_user.is_authenticated %}
+            <li class="nav-item dropdown">
+                <a class="nav-link px-2 dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                   data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    Слова
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="/userwords">Мои Слова</a></li>
+                    <li><a class="dropdown-item" href="/words">Слова</a></li>
+                </ul>
+            </li>
+        {% else %}
+            <li><a href="/words" class="nav-link px-2 link-dark">Слова</a></li>
+        {% endif %}
+
     </ul>
     <div class="col-md-3 text-end" style="display: flex; flex-direction: row; align-items: center;">
         <div class="form-check form-switch text-center">
@@ -141,7 +157,10 @@
     });
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+        crossorigin="anonymous"></script>
+{#<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>#}
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <script>
     {% if current_user.is_authenticated %}

@@ -8,7 +8,7 @@ from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
 from app import db
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app.models import User, Deck, Card, CardPerformance, user_decks, DeckPerformance, character
 from chinese_tools import searchWord
 from flask import jsonify
@@ -280,6 +280,65 @@ def words():
     return render_template('words.html', words=words, search=search)
 
 
+@app.route('/userwords')
+def userwords():
+    page = request.args.get('page', 1, type=int)
+    words_per_page = 20
+    search = request.args.get('search', '').strip()
+    review_period = request.args.get('review_period', '')
+    action = request.args.get('action', '')
+
+    if action == 'test':
+        return redirect(url_for('review_per', period=review_period))
+
+    if search:
+        query = Card.query.filter(
+            Card.chinese.ilike(f'%{search}%') |
+            Card.translation.ilike(f'%{search}%') |
+            Card.transcription.ilike(f'%{search}%')
+        ).join(Card.card_performance)
+    else:
+        query = Card.query.join(Card.card_performance)
+
+    now = datetime.now()
+
+    if review_period == 'last_week':
+        week_ago = now - timedelta(days=7)
+        query = query.filter(
+            CardPerformance.next_review_date >= week_ago,
+            CardPerformance.next_review_date <= now
+        )
+    if review_period == 'last_three_days':
+        last_three_days = now - timedelta(days=3)
+        query = query.filter(
+            CardPerformance.next_review_date >= last_three_days,
+            CardPerformance.next_review_date <= now
+        )
+    if review_period == 'last_day':
+        last_day = now - timedelta(days=1)
+        query = query.filter(
+            CardPerformance.next_review_date >= last_day,
+            CardPerformance.next_review_date <= now
+        )
+    elif review_period == 'zero':
+        query = query.filter(
+            CardPerformance.next_review_date >= now
+        )
+    elif review_period == 'week':
+        week = now + timedelta(days=7)
+        query = query.filter(
+            CardPerformance.next_review_date <= week,
+            CardPerformance.next_review_date >= now
+        )
+    elif review_period == 'last_year':
+        year_ago = now - timedelta(days=365)
+        query = query.filter(CardPerformance.next_review_date >= year_ago)
+
+    words = query.order_by(CardPerformance.next_review_date).paginate(page=page, per_page=words_per_page,
+                                                                      error_out=False)
+    return render_template('userwords.html', words=words, search=search, review_period=review_period)
+
+
 @app.route("/<string:back>/remove_child/<int:card_id>/<int:parent_id>")
 def remove_child(back, card_id, parent_id):
     card = Card.query.get_or_404(card_id)
@@ -390,6 +449,57 @@ def review(id):
         deck_data = ""
     return render_template("test.html", title=f"Deck {deck_curr.name}", deck=deck_curr,
                            title2="Повторение", to_test=to_test, test=False, deck_data=deck_data)
+
+
+@app.route('/review-per')
+def review_per():
+    review_period = request.args.get('period', '')
+    print(review_period)
+    now = datetime.now()
+
+    query = db.session.query(Card).join(CardPerformance).filter(CardPerformance.card_id == Card.id)
+
+    if review_period == 'last_week':
+        week_ago = now - timedelta(days=7)
+        query = query.filter(
+            CardPerformance.next_review_date >= week_ago,
+            CardPerformance.next_review_date <= now
+        )
+    elif review_period == 'last_three_days':
+        last_three_days = now - timedelta(days=3)
+        query = query.filter(
+            CardPerformance.next_review_date >= last_three_days,
+            CardPerformance.next_review_date <= now
+        )
+    elif review_period == 'last_day':
+        last_day = now - timedelta(days=1)
+        query = query.filter(
+            CardPerformance.next_review_date >= last_day,
+            CardPerformance.next_review_date <= now
+        )
+    elif review_period == 'zero':
+        query = query.filter(
+            CardPerformance.next_review_date >= now
+        )
+    elif review_period == 'week':
+        week = now + timedelta(days=7)
+        query = query.filter(
+            CardPerformance.next_review_date <= week,
+            CardPerformance.next_review_date >= now
+        )
+    elif review_period == 'last_year':
+        year_ago = now - timedelta(days=365)
+        query = query.filter(CardPerformance.next_review_date >= year_ago)
+
+    if current_user.is_authenticated:
+        query = query.filter(CardPerformance.user_id == current_user.id)
+    else:
+        return "error, not auntificated"
+
+    to_test = query.all()
+    deck_data = json.dumps({"cards": [card.to_dict(current_user.id) for card in to_test]})
+    return render_template("review-per.html", title="Повторение", to_test=to_test, review_period=review_period,
+                           deck_data=deck_data)
 
 
 @app.route('/api/update-performance', methods=['POST'])

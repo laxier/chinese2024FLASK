@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container">
+    {% if current_user.is_authenticated %}
+        <h1>Hi, {{ current_user.username }}!</h1>
+    {% endif %}
+    <h1>Список слов изученных на сайте (Всего: {{ words.total }})</h1>
+    <form method="GET" action="{{ url_for('userwords') }}">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" name="search" placeholder="Поиск по иероглифу, переводу или пиньиню"
+                   value="{{ request.args.get('search', '') }}">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Поиск</button>
+            </div>
+            <div class="input-group-append">
+                <select class="form-control" name="review_period">
+                    <option value="">Все слова</option>
+                    <option value="last_week" {% if request.args.get('review_period') == 'last_week' %}selected{% endif %}>За неделю</option>
+                    <option value="last_three_days" {% if request.args.get('review_period') == 'last_three_days' %}selected{% endif %}>За три дня</option>
+                    <option value="last_day" {% if request.args.get('review_period') == 'last_day' %}selected{% endif %}>За день</option>
+                    <option value="zero" {% if request.args.get('review_period') == 'zero' %}selected{% endif %}>Сейчас</option>
+{#                    <option value="three_days" {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три дня</option>#}
+                    <option value="week" {% if request.args.get('review_period') == 'week' %}selected{% endif %}>Через неделю</option>
+{#                    <option value="month_ago" {% if request.args.get('review_period') == 'month_ago' %}selected{% endif %}>За месяц (прошлый)</option>#}
+                    <option value="last_year" {% if request.args.get('review_period') == 'last_year' %}selected{% endif %}>Через год</option>
+                </select>
+            </div>
+            <div class="input-group-append">
+                <button class="btn btn-secondary" type="submit" name="action" value="test">Тестировать</button>
+            </div>
+        </div>
+    </form>
+    {% if words.items %}
+        <div class="container">
+        <div class="table-container">
+            <div class="table-row heading">
+                <div class="row-item">Слово</div>
+                <div class="row-item">Произношение</div>
+                <div class="row-item">Перевод</div>
+                <div class="row-item">Дата повтора</div>
+            </div>
+            {% for card in words %}
+                <div class="table-row">
+                    <div class="row-item">
+                        {% if card.children.count() > 0 %}
+                            <button class="toggle-children">↓</button>
+                        {% endif %}
+                        <div class="chinese">{{ card.chinese }}</div>
+                    </div>
+                    <div class="row-item">{{ card.transcription }}</div>
+                    <div class="row-item">{{ card.translation }}</div>
+                    <div class="row-item">
+                        {{ moment(card.perf_by_user(current_user.id).next_review_date).fromNow() }}
+                    </div>
+                </div>
+                {% if card.children.count() > 0 %}
+                    <div class="children" style="display: none;">
+                        {% for child in card.children.order_by() %}
+                            <div class="table-row">
+                                <div class="row-item">
+                                    {% if child.children.count() > 0 %}
+                                        <button class="toggle-children">↓</button>
+                                    {% endif %}
+                                    -->
+                                </div>
+                                <div class="row-item">
+                                    <div class="chinese">{{ child.chinese }}</div>
+                                    {{ child.transcription }}
+                                </div>
+                                <div class="row-item">{{ child.translation }}</div>
+                                <div class="row-item"></div>
+                            </div>
+                            {% if child.children.count() > 0 %}
+                                <div class="children2" style="display: none;">
+                                    {% for child2 in child.children.order_by() %}
+                                        <div class="table-row">
+                                            <div class="row-item">--></div>
+                                            <div class="row-item">
+                                                {% if child2.children.count() > 0 %}
+                                                    <button class="toggle-children">↓</button>
+                                                {% endif %}
+                                                <div class="chinese">{{ child2.chinese }}</div>
+                                                {{ child2.transcription }}
+                                            </div>
+                                            <div class="row-item">{{ child2.translation }}</div>
+                                            <div class="row-item"></div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+        {% if words.pages > 1 %}
+            <div class="pagination-container">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        {% if words.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="{{ url_for('userwords', page=words.prev_num, review_period=review_period, search=search) }}">&laquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        {% endif %}
+                        {% for page_num in words.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != words.page %}
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="{{ url_for('userwords', page=page_num, review_period=review_period, search=search) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">&hellip;</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if words.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="{{ url_for('userwords', page=words.next_num, review_period=review_period, search=search) }}">&raquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    {% else %}
+        <p>Пока нет изученных слов</p>
+    {% endif %}
+{% endblock %}

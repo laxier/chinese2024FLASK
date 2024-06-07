@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        {#        <h1>{{ title2 }} Тема: <a href="/deck/{{ deck.id }}">{{ deck.name }}</a></h1>#}
+        {% if to_test %}
+            <div class="container flash-container">
+                <div id="flashcard" class="flashcard">
+                    <div class="card-header" style="width:100%">
+                        <div class="progress">
+                            <div id="quiz-progress" class="progress-bar bg-info" role="progressbar"></div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="front">
+                            <h6 id="back-pronunciation">mama</h6>
+                            <h6 class="card-title" id="back-translation">сущ. мама</h6>
+                        </div>
+                        <div class="back" style="display: none;">
+                            <h5 id="front-character"
+                                style="font-family: KaiTi, STKaiti, DFKai-SB, BiauKai, Arial !important; font-size:80px;">
+                                妈妈</h5>
+                        </div>
+                        <div class="button-container">
+                            <button id="quiz-right" class="btn btn-outline-secondary">Верно</button>
+                            <button id="quiz-wrong" class="btn btn-outline-secondary"> Неверно</button>
+                        </div>
+                        <div class="button-container">
+                            <button id="quiz-restart" class="btn btn-outline-secondary">
+                                Перезапустить тест
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                Пока нет слов для повторения
+            </div>
+        {% endif %}
+        <div class="container">
+            {% if to_test %}
+                <div class="table-container">
+                    <div class="table-row heading">
+                        <div class="row-item">Слово</div>
+                        <div class="row-item">Произношение</div>
+                        <div class="row-item">Перевод</div>
+                        {% if current_user.is_authenticated %}
+                            <div class="row-item">Текущий прогресс</div>
+                        {% endif %}
+                    </div>
+                    {% for card in to_test %}
+                        <div class="table-row" card-id="{{ card.id }}">
+                            <div class="row-item chinese">
+                                <div class="chinese">{{ card.chinese }}</div>
+                            </div>
+                            <div class="row-item transcript">{{ card.transcription }}</div>
+                            <div class="row-item translations">{{ card.translation }}</div>
+                            {% if current_user.is_authenticated %}
+                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script>
+        window.addEventListener("load", function () {
+            console.log(document)
+            var Rows = document.querySelectorAll('.table-row:not(.heading)');
+            const progress_bar = document.getElementById("quiz-progress");
+            progress_bar.ariaValueMax = Rows.length
+            const increment = 100 / Rows.length;
+            let progress = 0;
+            let currentFlashcardIndex = 0;
+            let countRight = 0;
+            let incorrects = [];
+
+            displayFlashcard(currentFlashcardIndex);
+            let isQuizEnding = false;
+            const flashcard = document.getElementById("flashcard");
+
+            flashcard.addEventListener("click", function (event) {
+                if (event.target.tagName === 'BUTTON') {  // Ensure the click is not on the card itself
+                    return;
+                }
+                var front = document.querySelector('#flashcard .front');
+                var back = document.querySelector('#flashcard .back');
+                if (front.style.display !== "none") {
+                    front.style.display = "none";
+                    back.style.display = "flex";
+                } else {
+                    front.style.display = "flex";
+                    back.style.display = "none";
+                }
+            });
+
+            function displayFlashcard(index) {
+                var front = document.querySelector('#flashcard .front');
+                var back = document.querySelector('#flashcard .back');
+                front.style.display = "flex";
+                back.style.display = "none";
+                document.getElementById("front-character").textContent = Rows[index].querySelector('.chinese').textContent;
+                document.getElementById("back-pronunciation").textContent = Rows[index].querySelector('.transcript').textContent;
+                document.getElementById("back-translation").textContent = Rows[index].querySelector('.translations').textContent;
+            }
+
+            function getNextFlashcard() {
+                if (currentFlashcardIndex < Rows.length - 1) {
+                    currentFlashcardIndex++;
+                    progress += increment;
+                    progress_bar.style.width = `${progress}%`;
+                    displayFlashcard(currentFlashcardIndex);
+                } else if (!isQuizEnding) {
+                    isQuizEnding = true;
+                    progress += increment;
+                    progress_bar.style.width = `${progress}%`;
+
+                    function endQuiz() {
+                        alert("Больше нет слов, перезапускаю\n" + `${Math.round(countRight / Rows.length * 100)}%`);
+                        {% if deck in current_user.decks %}
+                            {% if test == True %}
+                                fetch('/api/update-deck', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        'percent': Math.min(100, Math.round(countRight / Rows.length * 100)),
+                                        'id': {{ deck.id }},
+                                        'incorrect': incorrects,
+                                    }),
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data);
+                                    });
+                            {% else %}
+                                fetch('/api/update-deck-nontest', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        'id': {{ deck.id }},
+                                        'incorrect': incorrects,
+                                    }),
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data);
+                                    });
+                            {% endif %}
+                        {% endif %}
+                        restartQuiz();
+                        progress_bar.removeEventListener('transitionend', endQuiz);
+                        isQuizEnding = false;
+                    }
+
+                    progress_bar.addEventListener('transitionend', endQuiz);
+                }
+            }
+
+            const restart = document.getElementById("quiz-restart")
+            restart.addEventListener('click', restartQuiz);
+
+            function restartQuiz() {
+                currentFlashcardIndex = 0;
+                progress = 0;
+                countRight = 0;
+                progress_bar.style.width = `${progress}%`;
+                displayFlashcard(currentFlashcardIndex);
+            }
+
+            const correct = document.getElementById("quiz-right")
+            correct.addEventListener('click', markCorrect);
+
+            function markCorrect() {
+                Rows[currentFlashcardIndex].classList.add("green");
+                let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
+                cell_data[0]++;
+                cell_data[1]++;
+                countRight++;
+                Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
+
+                fetch('/api/update-performance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'char': Rows[currentFlashcardIndex].querySelector('.row-item .chinese').textContent,
+                        'action': 'correct',
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        getNextFlashcard();
+                    });
+            }
+
+            const incorrect = document.getElementById("quiz-wrong")
+            incorrect.addEventListener('click', markIncorrect);
+
+            function markIncorrect() {
+                Rows[currentFlashcardIndex].classList.add("red");
+                let cell_data = Rows[currentFlashcardIndex].querySelector('.percent').textContent.split("/");
+                let cardText = Rows[currentFlashcardIndex].querySelector('.chinese').textContent;
+                incorrects.push(cardText);
+                {#incorrects += Rows[currentFlashcardIndex].querySelector('.chinese').textContent + ", "#}
+                cell_data[1]++;
+                Rows[currentFlashcardIndex].querySelector('.percent').textContent = cell_data[0] + "/" + cell_data[1];
+                fetch('/api/update-performance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'char': Rows[currentFlashcardIndex].querySelector('.row-item .chinese').textContent,
+                        'action': 'incorrect',
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Repetitions count updated successfully', data);
+                        getNextFlashcard();
+                    })
+            }
+        })
+    </script>
+{% endblock %}
