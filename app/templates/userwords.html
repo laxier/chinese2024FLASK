@@ -7,12 +7,9 @@
     <h1>Список слов изученных на сайте (Всего: {{ words.total }})</h1>
     <form method="GET" action="{{ url_for('userwords') }}">
         <div class="input-group mb-3">
-            <input type="text" class="form-control" name="search" placeholder="Поиск по иероглифу, переводу или пиньиню"
+            <input type="text" class="form-control search-input" name="search" placeholder="Поиск по иероглифу, переводу или пиньиню"
                    value="{{ request.args.get('search', '') }}">
-            <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">Поиск</button>
-            </div>
-            <div class="input-group-append">
+            <div class="input-group-append fall-choice">
                 <select class="form-control" name="review_period">
                     <option value="">Все слова</option>
                     <option value="last_week" {% if request.args.get('review_period') == 'last_week' %}selected{% endif %}>За неделю</option>
@@ -26,6 +23,7 @@
                 </select>
             </div>
             <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Поиск</button>
                 <button class="btn btn-secondary" type="submit" name="action" value="test">Тестировать</button>
             </div>
         </div>

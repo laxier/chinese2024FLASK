@@ -47,7 +47,7 @@
     <div class="col-md-3 text-end" style="display: flex; flex-direction: row; align-items: center;">
         <div class="form-check form-switch text-center">
             <input class="form-check-input" type="checkbox" id="darkSwitch" onchange="toggleTheme()" data-theme-toggle>
-            <label class="form-check-label" for="darkSwitch">Темная тема</label>
+            <label class="form-check-label" for="darkSwitch">Dark theme</label>
         </div>
         {% if current_user.is_anonymous %}
             <a class="btn btn-outline-primary me-2" href="{{ url_for('login') }}">login</a>
