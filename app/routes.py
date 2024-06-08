@@ -7,6 +7,7 @@ from flask_login import logout_user
 from flask_login import login_required
 from urllib.parse import urlsplit
 import sqlalchemy as sa
+from sqlalchemy import desc, asc, case, func, literal
 from app import db
 from datetime import datetime, timedelta, timezone
 from app.models import User, Deck, Card, CardPerformance, user_decks, DeckPerformance, character
@@ -287,9 +288,12 @@ def userwords():
     search = request.args.get('search', '').strip()
     review_period = request.args.get('review_period', '')
     action = request.args.get('action', '')
+    sort_by = request.args.get('sort_by', 'next_review_date')  # Установим значение по умолчанию
+    sort_order = request.args.get('sort_order', 'asc')
 
     if action == 'test':
-        return redirect(url_for('review_per', period=review_period))
+        print(review_period, sort_by, sort_order)
+        return redirect(url_for('review_per', period=review_period, sort_by=sort_by, sort_order=sort_order))
 
     if search:
         query = Card.query.filter(
@@ -334,9 +338,24 @@ def userwords():
         year_ago = now - timedelta(days=365)
         query = query.filter(CardPerformance.next_review_date >= year_ago)
 
-    words = query.order_by(CardPerformance.next_review_date).paginate(page=page, per_page=words_per_page,
-                                                                      error_out=False)
-    return render_template('userwords.html', words=words, search=search, review_period=review_period)
+    if sort_by == 'accuracy_percentage':
+        accuracy_percentage_expr = case(
+            (CardPerformance.repetitions > 0, (100.0 * CardPerformance.right / CardPerformance.repetitions)),
+            else_=literal(0)
+        )
+        sort_expr = desc(accuracy_percentage_expr) if sort_order == 'desc' else asc(accuracy_percentage_expr)
+    elif sort_by == 'next_review_date':
+        sort_expr = desc(CardPerformance.next_review_date) if sort_order == 'desc' else asc(
+            CardPerformance.next_review_date)
+    else:
+        sort_expr = CardPerformance.next_review_date
+
+    query = query.order_by(sort_expr)
+
+    words = query.paginate(page=page, per_page=words_per_page, error_out=False)
+
+    return render_template('userwords.html', words=words, search=search, review_period=review_period, sort_by=sort_by,
+                           sort_order=sort_order)
 
 
 @app.route("/<string:back>/remove_child/<int:card_id>/<int:parent_id>")
@@ -491,12 +510,30 @@ def review_per():
         year_ago = now + timedelta(days=365)
         query = query.filter(CardPerformance.next_review_date >= year_ago)
 
+    sort_by = request.args.get('sort_by')
+    sort_order = request.args.get('sort_order', 'asc')
+    print(sort_by, sort_order)
+
+    if sort_by == 'accuracy_percentage':
+        accuracy_percentage_expr = case(
+            (CardPerformance.repetitions > 0, (100.0 * CardPerformance.right / CardPerformance.repetitions)),
+            else_=literal(0)
+        )
+        sort_expr = desc(accuracy_percentage_expr) if sort_order == 'desc' else asc(accuracy_percentage_expr)
+    elif sort_by == 'next_review_date':
+        sort_expr = desc(CardPerformance.next_review_date) if sort_order == 'desc' else asc(
+            CardPerformance.next_review_date)
+    else:
+        sort_expr = CardPerformance.next_review_date
+
+    query = query.order_by(sort_expr)
+
     if current_user.is_authenticated:
         query = query.filter(CardPerformance.user_id == current_user.id)
     else:
-        return "error, not auntificated"
+        return "error, not authenticated"
 
-    to_test = query.order_by(CardPerformance.next_review_date).all()
+    to_test = query.all()
     deck_data = json.dumps({"cards": [card.to_dict(current_user.id) for card in to_test]})
     return render_template("review-per.html", title="Повторение", to_test=to_test, review_period=review_period,
                            deck_data=deck_data)
