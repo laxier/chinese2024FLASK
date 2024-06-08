@@ -142,7 +142,6 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-
             </div>
             {% if words.pages > 1 %}
                 <div class="pagination-container">
@@ -151,7 +150,7 @@
                             {% if words.has_prev %}
                                 <li class="page-item">
                                     <a class="page-link"
-                                       href="{{ url_for('userwords', page=words.prev_num, review_period=review_period, search=search) }}">&laquo;</a>
+                                       href="{{ url_for('userwords', page=words.prev_num, review_period=review_period, search=search, sort_by=sort_by, sort_order=sort_order) }}">&laquo;</a>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled">
@@ -163,7 +162,7 @@
                                     {% if page_num != words.page %}
                                         <li class="page-item">
                                             <a class="page-link"
-                                               href="{{ url_for('userwords', page=page_num, review_period=review_period, search=search) }}">{{ page_num }}</a>
+                                               href="{{ url_for('userwords', page=page_num, review_period=review_period, search=search, sort_by=sort_by, sort_order=sort_order) }}">{{ page_num }}</a>
                                         </li>
                                     {% else %}
                                         <li class="page-item active">
@@ -179,7 +178,7 @@
                             {% if words.has_next %}
                                 <li class="page-item">
                                     <a class="page-link"
-                                       href="{{ url_for('userwords', page=words.next_num, review_period=review_period, search=search) }}">&raquo;</a>
+                                       href="{{ url_for('userwords', page=words.next_num, review_period=review_period, search=search, sort_by=sort_by, sort_order=sort_order) }}">&raquo;</a>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled">
