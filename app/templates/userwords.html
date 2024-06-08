@@ -40,7 +40,8 @@
                         <option value="last_day"
                                 {% if request.args.get('review_period') == 'last_day' %}selected{% endif %}>За день
                         </option>
-                        <option value="zero" {% if request.args.get('review_period') == 'zero' %}selected{% endif %}>
+                        <option value="zero"
+                                {% if not request.args.get('review_period') or request.args.get('review_period') == 'zero' %}selected{% endif %}>
                             Сейчас
                         </option>
                         {#                    <option value="three_days" {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три дня</option>#}

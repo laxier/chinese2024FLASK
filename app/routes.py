@@ -292,7 +292,7 @@ def userwords():
     sort_order = request.args.get('sort_order', 'asc')
 
     if action == 'test':
-        print(review_period, sort_by, sort_order)
+        # print(review_period, sort_by, sort_order)
         return redirect(url_for('review_per', period=review_period, sort_by=sort_by, sort_order=sort_order))
 
     if search:
@@ -324,7 +324,7 @@ def userwords():
             CardPerformance.next_review_date >= last_day,
             CardPerformance.next_review_date <= now
         )
-    elif review_period == 'zero':
+    elif review_period == '' or review_period=='zero':
         query = query.filter(
             CardPerformance.next_review_date >= now
         )
