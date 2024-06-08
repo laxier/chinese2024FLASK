@@ -1,7 +1,8 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from typing import List, Tuple
 from typing import Set
 import sqlalchemy as sa
 from sqlalchemy import exc
@@ -10,7 +11,6 @@ from chinese_tools import searchWord, decomposeWord
 from app import db
 from app import login
 import math
-from datetime import timedelta
 
 
 class User(UserMixin, db.Model):
@@ -193,24 +193,6 @@ class Deck(db.Model):
             DeckPerformance.test_date.desc()).limit(n).all()
         return deck_performances
 
-    def review_deck(self, user_id, performance):
-        deck_performance = performance
-        spaced_repetition = DeckSpacedRepetition(deck_performance.ef_factor)
-        quality = deck_performance.calculate_quality()
-        last_count = DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id,
-                                                     is_latest=True).first().repetitions
-        deck_performance.repetitions = last_count
-
-        interval = spaced_repetition.calculate_interval(deck_performance.repetitions, quality)
-        deck_performance.ef_factor = spaced_repetition.ef_factor
-        deck_performance.repetitions = last_count + 1
-        deck_performance.last_review_date = datetime.now(timezone.utc)
-        deck_performance.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
-        deck_performance.is_latest = True
-        DeckPerformance.query.filter_by(user_id=user_id, deck_id=self.id).filter(
-            DeckPerformance.id != deck_performance.id).update({'is_latest': False}, synchronize_session=False)
-        db.session.commit()
-
     def sort_timestamp_by_user(self, user_id):
         query = sa.select(user_decks).filter_by(user_id=user_id, deck_id=self.id)
         progress = db.session.execute(query).first()
@@ -295,6 +277,7 @@ class CardPerformance(db.Model):
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
     ef_factor: so.Mapped[float] = so.mapped_column(sa.Float, default=2)
     _minimum_ef_factor = 1.3
+    _maximum_ef_factor = 2.6
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
@@ -337,8 +320,10 @@ class CardPerformance(db.Model):
 
         if quality < 3:
             interval = 1
+
+        # Обновляем ef_factor в зависимости от качества ответа
         new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-        self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
+        self.ef_factor = max(self._minimum_ef_factor, min(new_ef_factor, self._maximum_ef_factor))
 
         return interval
 
@@ -369,37 +354,30 @@ class CardPerformance(db.Model):
         self.edited = datetime.now(timezone.utc)
         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
+    # def simulate_repetitions(self, repetitions: List[Tuple[bool, int]]):
+    #     """
+    #     Моделирует несколько повторений с различными результатами и обновляет значения ef_factor и next_review_date.
+    #     repetitions: список кортежей вида (is_correct, quality), где:
+    #         is_correct: True для правильного ответа, False для неправильного
+    #         quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
+    #     """
+    #     self.repetitions = 0
+    #     self.right = 0
+    #     self.wrong = 0
+    #     for is_correct, quality in repetitions:
+    #         if is_correct:
+    #             self.repetitions += 1
+    #             self.right += 1
+    #         else:
+    #             self.repetitions += 1
+    #             self.wrong += 1
+    #
+    #         interval = self.calculate_interval(self.repetitions, quality)
+    #         self.edited = datetime.now(timezone.utc)
+    #         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'
-
-
-class DeckSpacedRepetition:
-    def __init__(self, ef_factor=2.5):
-        self.ef_factor = ef_factor
-
-    def calculate_interval(self, repetitions, quality):
-        """
-        Вычисляет следующий интервал повторения колоды на основе алгоритма SuperMemo 2 (SM-2).
-
-        repetitions: количество предыдущих повторений колоды
-        quality: оценка качества запоминания колоды от 0 (забыли) до 5 (легко запомнили)
-        """
-        if repetitions == 0:
-            interval = 1
-        elif repetitions == 1:
-            interval = 5
-        else:
-            interval = math.ceil(self.ef_factor * (repetitions - 1))
-
-        if quality < 3:
-            interval = 1
-        else:
-            self.ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            if self.ef_factor < 1.3:
-                self.ef_factor = 1.3
-
-        return interval
-
 
 class DeckPerformance(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -408,30 +386,8 @@ class DeckPerformance(db.Model):
     percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
     test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
     wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
-    ef_factor: so.Mapped[float] = so.mapped_column(default=2.5)
-    repetitions: so.Mapped[int] = so.mapped_column(default=1)
-    next_review_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now(timezone.utc))
-    last_review_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now(timezone.utc))
-    is_latest: so.Mapped[bool] = so.mapped_column(default=True)
-
     def __repr__(self):
         return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
-
-    def calculate_quality(self):
-        """
-        Вычисляет оценку качества запоминания колоды (quality) на основе процента правильных ответов (percent_correct).
-        """
-        accuracy = self.percent_correct
-        if accuracy >= 90:
-            return 5
-        elif accuracy >= 70:
-            return 4
-        elif accuracy >= 50:
-            return 3
-        elif accuracy >= 30:
-            return 2
-        else:
-            return 1
 
 
 character_rel = db.Table(

@@ -226,21 +226,6 @@
                                     .then(data => {
                                         console.log(data);
                                     });
-                            {% else %}
-                                fetch('/api/update-deck-nontest', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({
-                                        'id': {{ deck.id }},
-                                        'incorrect': incorrects,
-                                    }),
-                                })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        console.log(data);
-                                    });
                             {% endif %}
                         {% endif %}
                         restartQuiz();

@@ -590,8 +590,8 @@ def update_deck():
                                 wrong_answers=incorrect)
     db.session.add(deck_perf)
     db.session.commit()
-    Deck_to = Deck.query.filter_by(id=id).first()
-    Deck_to.review_deck(user_id=current_user.id, performance=deck_perf)
+    # Deck_to = Deck.query.filter_by(id=id).first()
+    # Deck_to.review_deck(user_id=current_user.id, performance=deck_perf)
     update_query = user_decks.update().values(percent=percent).where(
         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
     db.session.execute(update_query)
@@ -599,23 +599,23 @@ def update_deck():
     return jsonify({'message': 'processed successfully'})
 
 
-@app.route('/api/update-deck-nontest', methods=['POST'])
-@login_required
-def update_deck_nontest():
-    data = request.get_json()
-    id = data.get('id')
-    incorrect = data.get('incorrect', [])
-    percent = round(100 * (1 - len(incorrect) / len(Deck.query.filter_by(id=id).first().cards)))
-    if percent is None:
-        return jsonify({'error': 'Missing percent'})
-    if incorrect is None:
-        return jsonify({'error': 'Missing incorrect'})
-
-    update_query = user_decks.update().values(percent=percent).where(
-        (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
-    db.session.execute(update_query)
-    db.session.commit()
-    return jsonify({'message': 'processed successfully'})
+# @app.route('/api/update-deck-nontest', methods=['POST'])
+# @login_required
+# def update_deck_nontest():
+#     data = request.get_json()
+#     id = data.get('id')
+#     incorrect = data.get('incorrect', [])
+#     percent = round(100 * (1 - len(incorrect) / len(Deck.query.filter_by(id=id).first().cards)))
+#     if percent is None:
+#         return jsonify({'error': 'Missing percent'})
+#     if incorrect is None:
+#         return jsonify({'error': 'Missing incorrect'})
+#
+#     update_query = user_decks.update().values(percent=percent).where(
+#         (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
+#     db.session.execute(update_query)
+#     db.session.commit()
+#     return jsonify({'message': 'processed successfully'})
 
 
 def format_date(date):
