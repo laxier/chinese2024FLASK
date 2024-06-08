@@ -306,6 +306,8 @@ def userwords():
 
     now = datetime.now()
 
+    if review_period == 'all':
+        query = query
     if review_period == 'last_week':
         week_ago = now - timedelta(days=7)
         query = query.filter(

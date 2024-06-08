@@ -28,7 +28,8 @@
                        value="{{ request.args.get('search', '') }}">
                 <div class="input-group-append fall-choice">
                     <select class="form-control" name="review_period">
-                        <option value="">Все слова</option>
+                        <option value="all">
+                            {% if request.args.get('review_period') == 'all' %}selected{% endif %}>Все слова</option>
                         <option value="last_week"
                                 {% if request.args.get('review_period') == 'last_week' %}selected{% endif %}>За неделю
                         </option>
