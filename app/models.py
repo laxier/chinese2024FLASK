@@ -337,9 +337,8 @@ class CardPerformance(db.Model):
 
         if quality < 3:
             interval = 1
-        else:
-            new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
+        new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+        self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
 
         return interval
 
@@ -361,7 +360,7 @@ class CardPerformance(db.Model):
         else:
             self.repetitions += 1
         self.wrong += 1
-        quality = 3
+        quality = 2
 
         if self.accuracy_percentage >= 80:
             quality = 1
