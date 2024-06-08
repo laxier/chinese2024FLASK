@@ -45,9 +45,7 @@
                         <div class="row-item">Слово</div>
                         <div class="row-item">Произношение</div>
                         <div class="row-item">Перевод</div>
-                        {% if current_user.is_authenticated %}
-                            <div class="row-item">Текущий прогресс</div>
-                        {% endif %}
+                        <div class="row-item">Текущий прогресс</div>
                     </div>
                     {% for card in to_test %}
                         <div class="table-row" card-id="{{ card.id }}">
@@ -56,9 +54,7 @@
                             </div>
                             <div class="row-item transcript">{{ card.transcription }}</div>
                             <div class="row-item translations">{{ card.translation }}</div>
-                            {% if current_user.is_authenticated %}
-                                <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
-                            {% endif %}
+                            <div class="row-item percent">{{ card.perf_by_user(current_user.id) }}</div>
                         </div>
                     {% endfor %}
                 </div>

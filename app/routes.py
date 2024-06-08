@@ -488,7 +488,7 @@ def review_per():
             CardPerformance.next_review_date >= now
         )
     elif review_period == 'last_year':
-        year_ago = now - timedelta(days=365)
+        year_ago = now + timedelta(days=365)
         query = query.filter(CardPerformance.next_review_date >= year_ago)
 
     if current_user.is_authenticated:
@@ -496,7 +496,7 @@ def review_per():
     else:
         return "error, not auntificated"
 
-    to_test = query.all()
+    to_test = query.order_by(CardPerformance.next_review_date).all()
     deck_data = json.dumps({"cards": [card.to_dict(current_user.id) for card in to_test]})
     return render_template("review-per.html", title="Повторение", to_test=to_test, review_period=review_period,
                            deck_data=deck_data)
