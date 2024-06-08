@@ -287,39 +287,14 @@ deck_cards = db.Table(
 )
 
 
-class SpacedRepetition:
-    def __init__(self, initial_ef_factor=2):
-        self.ef_factor = initial_ef_factor
-        self._minimum_ef_factor = 1.3
-
-    def calculate_interval(self, repetitions, quality):
-        """
-        Вычисляет следующий интервал повторения на основе алгоритма SuperMemo 2 (SM-2).
-
-        repetitions: количество предыдущих повторений
-        quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
-        """
-        if repetitions == 1:
-            interval = 1
-        else:
-            interval = math.ceil(self.ef_factor * (repetitions - 1))
-
-        if quality < 3:
-            interval = 1
-        else:
-            new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
-
-        return interval
-
-
 class CardPerformance(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id, ondelete='CASCADE'), nullable=False)
     user: so.Mapped[User] = so.relationship(back_populates="card_performance")
     card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
-    ef_factor = sa.Column(sa.Float, default=2)
+    ef_factor: so.Mapped[float] = so.mapped_column(sa.Float, default=2)
+    _minimum_ef_factor = 1.3
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
@@ -348,6 +323,26 @@ class CardPerformance(db.Model):
             'next_review_date': self.next_review_date.isoformat()
         }
 
+    def calculate_interval(self, repetitions, quality):
+        """
+        Вычисляет следующий интервал повторения на основе алгоритма SuperMemo 2 (SM-2).
+
+        repetitions: количество предыдущих повторений
+        quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
+        """
+        if repetitions == 1:
+            interval = 1
+        else:
+            interval = math.ceil(self.ef_factor * (repetitions - 1))
+
+        if quality < 3:
+            interval = 1
+        else:
+            new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            self.ef_factor = max(new_ef_factor, self._minimum_ef_factor)
+
+        return interval
+
     def correct(self):
         if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
             pass
@@ -356,9 +351,7 @@ class CardPerformance(db.Model):
             self.right += 1
             quality = 4
 
-            spaced_repetition = SpacedRepetition(self.ef_factor)
-            interval = spaced_repetition.calculate_interval(self.repetitions, quality)
-            self.ef_factor = spaced_repetition.ef_factor
+            interval = self.calculate_interval(self.repetitions, quality)
             self.edited = datetime.now(timezone.utc)
             self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
@@ -368,14 +361,12 @@ class CardPerformance(db.Model):
         else:
             self.repetitions += 1
         self.wrong += 1
-        quality = 2
+        quality = 3
 
         if self.accuracy_percentage >= 80:
             quality = 1
 
-        spaced_repetition = SpacedRepetition(self.ef_factor)
-        interval = spaced_repetition.calculate_interval(self.repetitions, quality)
-        self.ef_factor = spaced_repetition.ef_factor
+        interval = self.calculate_interval(self.repetitions, quality)
         self.edited = datetime.now(timezone.utc)
         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
