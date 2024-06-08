@@ -336,9 +336,9 @@ def userwords():
             CardPerformance.next_review_date <= week,
             CardPerformance.next_review_date >= now
         )
-    elif review_period == 'last_year':
-        year_ago = now - timedelta(days=365)
-        query = query.filter(CardPerformance.next_review_date >= year_ago)
+    # elif review_period == 'last_year':
+    #     year_ago = now - timedelta(days=365)
+    #     query = query.filter(CardPerformance.next_review_date <= year_ago)
 
     if sort_by == 'accuracy_percentage':
         accuracy_percentage_expr = case(

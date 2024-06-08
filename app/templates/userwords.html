@@ -28,8 +28,9 @@
                        value="{{ request.args.get('search', '') }}">
                 <div class="input-group-append fall-choice">
                     <select class="form-control" name="review_period">
-                        <option value="all">
-                            {% if request.args.get('review_period') == 'all' %}selected{% endif %}>Все слова</option>
+                        <option value="all" {% if request.args.get('review_period') == 'all' %}selected{% endif %}>
+                            Все слова
+                        </option>
                         <option value="last_week"
                                 {% if request.args.get('review_period') == 'last_week' %}selected{% endif %}>За неделю
                         </option>
@@ -51,9 +52,9 @@
                             неделю
                         </option>
                         {#                    <option value="month_ago" {% if request.args.get('review_period') == 'month_ago' %}selected{% endif %}>За месяц (прошлый)</option>#}
-                        <option value="last_year"
-                                {% if request.args.get('review_period') == 'last_year' %}selected{% endif %}>Через год
-                        </option>
+                        {#                        <option value="last_year"#}
+                        {#                                {% if request.args.get('review_period') == 'last_year' %}selected{% endif %}>Через год#}
+                        {#                        </option>#}
                     </select>
                 </div>
                 <div class="input-group-append">
