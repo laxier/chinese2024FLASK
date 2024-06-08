@@ -480,15 +480,17 @@ main {
     justify-content: center;
 }
 
-/*.ascending,*/
-/*.descending {*/
-/*    font-style: italic;*/
-/*    background-color: #F0F0F0;*/
-/*}*/
+.ascending,
+.descending {
+    color: dimgray;
+}
+.dark-theme .sort-element{
+    color: var(--bs-element-color) !important;
+}
 
 .dark-theme .ascending,
 .dark-theme .descending {
-    background-color: var(--bs-hover-color);
+    color: rgb(109 187 247 / 92%);
 }
 
 .ascending::after {
