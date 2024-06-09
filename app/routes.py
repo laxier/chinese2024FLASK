@@ -304,7 +304,7 @@ def userwords():
     else:
         query = Card.query.join(Card.card_performance)
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     if review_period == 'all':
         query = query
@@ -481,8 +481,8 @@ def review(id):
 @app.route('/review-per')
 def review_per():
     review_period = request.args.get('period', '')
-    print(review_period)
-    now = datetime.now()
+    # print(review_period)
+    now = datetime.now(timezone.utc)
 
     query = db.session.query(Card).join(CardPerformance).filter(CardPerformance.card_id == Card.id)
 
@@ -526,7 +526,7 @@ def review_per():
 
     sort_by = request.args.get('sort_by')
     sort_order = request.args.get('sort_order', 'asc')
-    print(sort_by, sort_order)
+    # print(sort_by, sort_order)
 
     if sort_by == 'accuracy_percentage':
         accuracy_percentage_expr = case(
@@ -566,7 +566,7 @@ def update_performance():
     performance = Card.query.filter_by(chinese=char).first().perf_by_user(user_id=current_user.id)
     if performance is None:
         return jsonify({'error': 'Performance not found'})
-        print(action)
+        # print(action)
     if action == "correct":
         performance.correct()
         db.session.commit()

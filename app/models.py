@@ -276,8 +276,8 @@ class CardPerformance(db.Model):
     card_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Card.id, ondelete='CASCADE'), nullable=False)
     card: so.Mapped[Card] = so.relationship(back_populates="card_performance")
     ef_factor: so.Mapped[float] = so.mapped_column(sa.Float, default=2)
-    _minimum_ef_factor = 1.3
-    _maximum_ef_factor = 2.6
+    _minimum_ef_factor = 1.1
+    _maximum_ef_factor = 3
     repetitions: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     right: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
     wrong: so.Mapped[int] = so.mapped_column(sa.Integer, default=0)
@@ -307,12 +307,6 @@ class CardPerformance(db.Model):
         }
 
     def calculate_interval(self, repetitions, quality):
-        """
-        Вычисляет следующий интервал повторения на основе алгоритма SuperMemo 2 (SM-2).
-
-        repetitions: количество предыдущих повторений
-        quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
-        """
         if repetitions == 1:
             interval = 1
         else:
@@ -321,18 +315,21 @@ class CardPerformance(db.Model):
         if quality < 3:
             interval = 1
 
-        # Обновляем ef_factor в зависимости от качества ответа
         new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
         self.ef_factor = max(self._minimum_ef_factor, min(new_ef_factor, self._maximum_ef_factor))
-
         return interval
 
     def correct(self):
         if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
             pass
         else:
-            self.repetitions += 1
-            self.right += 1
+            if (self.right <= 1 and self.repetitions >=2) or (self.accuracy_percentage <= 30 and self.repetitions >=3):
+                self.repetitions = 2
+                self.right = 1
+                self.wrong = 1
+            else:
+                self.repetitions += 1
+                self.right += 1
             quality = 4
 
             interval = self.calculate_interval(self.repetitions, quality)
@@ -344,15 +341,15 @@ class CardPerformance(db.Model):
             pass
         else:
             self.repetitions += 1
-        self.wrong += 1
-        quality = 2
+            self.wrong += 1
+            quality = 2
 
-        if self.accuracy_percentage >= 80:
-            quality = 1
+            if self.accuracy_percentage >= 80:
+                quality = 1
 
-        interval = self.calculate_interval(self.repetitions, quality)
-        self.edited = datetime.now(timezone.utc)
-        self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+            interval = self.calculate_interval(self.repetitions, quality)
+            self.edited = datetime.now(timezone.utc)
+            self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
     def simulate_repetitions(self, repetitions: List[Tuple[bool, int]]):
         """
@@ -381,9 +378,9 @@ class CardPerformance(db.Model):
         else:
             self.ef_factor = 2
 
-
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'
+
 
 class DeckPerformance(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -392,6 +389,7 @@ class DeckPerformance(db.Model):
     percent_correct: so.Mapped[int] = so.mapped_column(sa.Integer)
     test_date: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
     wrong_answers: so.Mapped[str] = so.mapped_column(sa.Text)
+
     def __repr__(self):
         return f'Deck Performance: User {self.user_id}, Deck {self.deck_id}, Percent Correct {self.percent_correct}, Test Date {self.test_date}'
 
