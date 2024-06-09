@@ -330,6 +330,12 @@ def userwords():
         query = query.filter(
             CardPerformance.next_review_date >= now
         )
+    elif review_period == 'three_days':
+        three_days = now + timedelta(days=3)
+        query = query.filter(
+            CardPerformance.next_review_date <= three_days,
+            CardPerformance.next_review_date >= now
+        )
     elif review_period == 'week':
         week = now + timedelta(days=7)
         query = query.filter(
@@ -502,15 +508,21 @@ def review_per():
         query = query.filter(
             CardPerformance.next_review_date >= now
         )
+    elif review_period == 'three_days':
+        three_days = now + timedelta(days=3)
+        query = query.filter(
+            CardPerformance.next_review_date <= three_days,
+            CardPerformance.next_review_date >= now
+        )
     elif review_period == 'week':
         week = now + timedelta(days=7)
         query = query.filter(
             CardPerformance.next_review_date <= week,
             CardPerformance.next_review_date >= now
         )
-    elif review_period == 'last_year':
-        year_ago = now + timedelta(days=365)
-        query = query.filter(CardPerformance.next_review_date >= year_ago)
+    # elif review_period == 'last_year':
+    #     year_ago = now + timedelta(days=365)
+    #     query = query.filter(CardPerformance.next_review_date >= year_ago)
 
     sort_by = request.args.get('sort_by')
     sort_order = request.args.get('sort_order', 'asc')

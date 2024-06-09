@@ -354,27 +354,33 @@ class CardPerformance(db.Model):
         self.edited = datetime.now(timezone.utc)
         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
 
-    # def simulate_repetitions(self, repetitions: List[Tuple[bool, int]]):
-    #     """
-    #     Моделирует несколько повторений с различными результатами и обновляет значения ef_factor и next_review_date.
-    #     repetitions: список кортежей вида (is_correct, quality), где:
-    #         is_correct: True для правильного ответа, False для неправильного
-    #         quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
-    #     """
-    #     self.repetitions = 0
-    #     self.right = 0
-    #     self.wrong = 0
-    #     for is_correct, quality in repetitions:
-    #         if is_correct:
-    #             self.repetitions += 1
-    #             self.right += 1
-    #         else:
-    #             self.repetitions += 1
-    #             self.wrong += 1
-    #
-    #         interval = self.calculate_interval(self.repetitions, quality)
-    #         self.edited = datetime.now(timezone.utc)
-    #         self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
+    def simulate_repetitions(self, repetitions: List[Tuple[bool, int]]):
+        """
+        Моделирует несколько повторений с различными результатами и обновляет значения ef_factor и next_review_date.
+        repetitions: список кортежей вида (is_correct, quality), где:
+            is_correct: True для правильного ответа, False для неправильного
+            quality: оценка качества запоминания от 0 (забыли) до 5 (легко запомнили)
+        """
+        self.repetitions = 0
+        self.right = 0
+        self.wrong = 0
+        for is_correct, quality in repetitions:
+            if is_correct:
+                self.repetitions += 1
+                self.right += 1
+            else:
+                self.repetitions += 1
+                self.wrong += 1
+            new_ef_factor = self.ef_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            self.ef_factor = max(self._minimum_ef_factor, min(new_ef_factor, self._maximum_ef_factor))
+        if repetitions:
+            quality = repetitions[-1][1]
+            interval = self.calculate_interval(self.repetitions, quality)
+            # self.edited = datetime.now(timezone.utc)
+            self.next_review_date = self.edited + timedelta(days=interval)
+        else:
+            self.ef_factor = 2
+
 
     def __repr__(self):
         return f'{self.right}/{self.repetitions}'

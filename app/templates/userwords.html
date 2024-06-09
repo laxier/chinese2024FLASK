@@ -46,10 +46,9 @@
                                 {% if not request.args.get('review_period') or request.args.get('review_period') == 'zero' %}selected{% endif %}>
                             Сейчас
                         </option>
-                        {#                    <option value="three_days" {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три дня</option>#}
+                        <option value="three_days" {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три дня</option>
                         <option value="week" {% if request.args.get('review_period') == 'week' %}selected{% endif %}>
-                            Через
-                            неделю
+                            Через неделю
                         </option>
                         {#                    <option value="month_ago" {% if request.args.get('review_period') == 'month_ago' %}selected{% endif %}>За месяц (прошлый)</option>#}
                         {#                        <option value="last_year"#}
