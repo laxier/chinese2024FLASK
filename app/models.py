@@ -288,7 +288,7 @@ class CardPerformance(db.Model):
     @property
     def accuracy_percentage(self):
         if self.repetitions > 0:
-            return round((self.right / self.repetitions) * 100)
+            return round((self.right / self.right+self.wrong) * 100)
         else:
             return 0
 
@@ -323,10 +323,10 @@ class CardPerformance(db.Model):
         if self.next_review_date.replace(tzinfo=timezone.utc) >= datetime.now(timezone.utc) and self.repetitions != 0:
             pass
         else:
-            if (self.right <= 1 and self.repetitions >=2) or (self.accuracy_percentage <= 30 and self.repetitions >=3):
-                self.repetitions = 2
+            if (self.right <= 1 and self.repetitions >=3) or (self.accuracy_percentage <= 30 and self.repetitions >=3):
+                self.repetitions = 1
                 self.right = 1
-                self.wrong = 1
+                # self.wrong = 1
             else:
                 self.repetitions += 1
                 self.right += 1

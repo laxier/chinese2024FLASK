@@ -201,10 +201,11 @@ def min_rep(deck_id, id, point):
     if performance is not None:
         if point == "right":
             performance.right = performance.right + 1
-            performance.repetitions = performance.repetitions + 1
+            # performance.repetitions = performance.repetitions + 1
             performance.timestamp = datetime.utcnow()
         elif point == "wrong":
-            performance.repetitions = performance.repetitions + 1
+            performance.wrong = performance.wrong + 1
+            # performance.repetitions = performance.repetitions + 1
             performance.timestamp = datetime.utcnow()
         else:
             return "Error"
@@ -218,6 +219,7 @@ def obnulit(id, back):
     performance = CardPerformance.query.get_or_404(id)
     if performance is not None:
         performance.right = 0
+        performance.wrong = 0
         performance.repetitions = 0
         performance.timestamp = datetime.utcnow()
         db.session.commit()
@@ -326,7 +328,7 @@ def userwords():
             CardPerformance.next_review_date >= last_day,
             CardPerformance.next_review_date <= now
         )
-    elif review_period == '' or review_period=='zero':
+    elif review_period == '' or review_period == 'zero':
         query = query.filter(
             CardPerformance.next_review_date >= now
         )
@@ -348,7 +350,8 @@ def userwords():
 
     if sort_by == 'accuracy_percentage':
         accuracy_percentage_expr = case(
-            (CardPerformance.repetitions > 0, (100.0 * CardPerformance.right / CardPerformance.repetitions)),
+            (CardPerformance.repetitions > 0,
+             (100.0 * CardPerformance.right / (CardPerformance.right + CardPerformance.wrong))),
             else_=literal(0)
         )
         sort_expr = desc(accuracy_percentage_expr) if sort_order == 'desc' else asc(accuracy_percentage_expr)
@@ -530,7 +533,8 @@ def review_per():
 
     if sort_by == 'accuracy_percentage':
         accuracy_percentage_expr = case(
-            (CardPerformance.repetitions > 0, (100.0 * CardPerformance.right / CardPerformance.repetitions)),
+            (CardPerformance.repetitions > 0,
+             (100.0 * CardPerformance.right / (CardPerformance.right + CardPerformance.wrong))),
             else_=literal(0)
         )
         sort_expr = desc(accuracy_percentage_expr) if sort_order == 'desc' else asc(accuracy_percentage_expr)
