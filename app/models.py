@@ -379,7 +379,7 @@ class CardPerformance(db.Model):
             self.ef_factor = 2
 
     def __repr__(self):
-        return f'{self.right}/{self.repetitions}'
+        return f'{self.right}/{self.right+self.wrong}'
 
 
 class DeckPerformance(db.Model):
