@@ -325,7 +325,7 @@ class CardPerformance(db.Model):
         else:
             if (self.right <= 1 and self.repetitions >=3) or (self.accuracy_percentage <= 30 and self.repetitions >=3):
                 self.repetitions = 1
-                self.right = 1
+                # self.right = 1
                 # self.wrong = 1
             else:
                 self.repetitions += 1
