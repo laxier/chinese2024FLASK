@@ -379,7 +379,7 @@ class CardPerformance(db.Model):
             self.ef_factor = 2
 
     def __repr__(self):
-        if self.right and self.wrong:
+        if self.right or self.wrong:
             return f'{self.right}/{self.right+self.wrong}'
         else:
             return '0/0'
