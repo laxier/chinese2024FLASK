@@ -586,33 +586,36 @@ def update_performance():
 @app.route('/api/update-deck', methods=['POST'])
 @login_required
 def update_deck():
-    data = request.get_json()
-    id = data.get('id')
-    percent = data.get('percent')
-    incorrect = data.get('incorrect', [])
-    if len(incorrect) == 1:
-        incorrect = str(incorrect[0]).strip()
-    else:
-        incorrect = ', '.join(str(card).strip() for card in incorrect)
-    # print(incorrect)
-    if percent is None:
-        return jsonify({'error': 'Missing percent'})
-    if id is None:
-        return jsonify({'error': 'Missing id'})
-    if incorrect is None:
-        return jsonify({'error': 'Missing incorrect'})
-    deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent,
-                                test_date=datetime.now(timezone.utc),
-                                wrong_answers=incorrect)
-    db.session.add(deck_perf)
-    db.session.commit()
-    # Deck_to = Deck.query.filter_by(id=id).first()
-    # Deck_to.review_deck(user_id=current_user.id, performance=deck_perf)
-    update_query = user_decks.update().values(percent=percent).where(
-        (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
-    db.session.execute(update_query)
-    db.session.commit()
-    return jsonify({'message': 'processed successfully'})
+    try:
+        data = request.get_json()
+        id = data.get('id')
+        percent = data.get('percent')
+        incorrect = data.get('incorrect', [])
+        if len(incorrect) == 1:
+            incorrect = str(incorrect[0]).strip()
+        else:
+            incorrect = ', '.join(str(card).strip() for card in incorrect)
+        # print(incorrect)
+        if percent is None:
+            return jsonify({'error': 'Missing percent'})
+        if id is None:
+            return jsonify({'error': 'Missing id'})
+        if incorrect is None:
+            return jsonify({'error': 'Missing incorrect'})
+        deck_perf = DeckPerformance(user_id=current_user.id, deck_id=id, percent_correct=percent,
+                                    test_date=datetime.now(timezone.utc),
+                                    wrong_answers=incorrect)
+        db.session.add(deck_perf)
+        db.session.commit()
+        # Deck_to = Deck.query.filter_by(id=id).first()
+        # Deck_to.review_deck(user_id=current_user.id, performance=deck_perf)
+        update_query = user_decks.update().values(percent=percent).where(
+            (user_decks.c.user_id == current_user.id) & (user_decks.c.deck_id == id))
+        db.session.execute(update_query)
+        db.session.commit()
+        return jsonify({'message': 'deck processed successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # @app.route('/api/update-deck-nontest', methods=['POST'])
