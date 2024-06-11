@@ -288,7 +288,7 @@ class CardPerformance(db.Model):
     @property
     def accuracy_percentage(self):
         if self.repetitions > 0:
-            return round((self.right / self.right+self.wrong) * 100)
+            return round((self.right / (self.right+self.wrong)) * 100)
         else:
             return 0
 
