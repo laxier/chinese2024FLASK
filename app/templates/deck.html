@@ -66,6 +66,7 @@
                                         <div class="row-item">{{ child.translation }}</div>
                                         <div class="row-item percent">{{ child.perf_by_user(current_user.id).accuracy_percentage }}%</div>
                                         <div class="row-item"></div>
+                                        <div class="row-item"></div>
                                     </div>
                                     {% if card.children.count() > 0 %}
                                         <div class="children2" style="display: none;">
@@ -77,6 +78,7 @@
                                                         {{ child2.transcription }}</div>
                                                     <div class="row-item">{{ child2.translation }}</div>
                                                     <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
+                                                    <div class="row-item"></div>
                                                     <div class="row-item"></div>
                                                 </div>
                                             {% endfor %}
