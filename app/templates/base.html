@@ -197,7 +197,7 @@
         });
         const rowItems = document.querySelectorAll('div.row-item');
         let currentIndex = 0;
-        const chineseElements = Array.from(document.querySelectorAll('.chinese'));
+        const chineseElements = Array.from(document.querySelectorAll('.chinese:not(.children)'));
         rowItems.forEach(rowItem => {
             const chineseElement = rowItem.querySelector('.chinese');
             if (chineseElement) {

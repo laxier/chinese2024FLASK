@@ -60,7 +60,7 @@
                                             -->
                                         </div>
                                         <div class="row-item">
-                                            <div class="chinese">{{ child.chinese }}</div>
+                                            <div class="chinese children">{{ child.chinese }}</div>
                                             {{ child.transcription }}
                                         </div>
                                         <div class="row-item">{{ child.translation }}</div>
@@ -74,7 +74,7 @@
                                                 <div class="table-row">
                                                     <div class="row-item">--></div>
                                                     <div class="row-item">
-                                                        <div class="chinese">{{ child2.chinese }}</div>
+                                                        <div class="chinese children">{{ child2.chinese }}</div>
                                                         {{ child2.transcription }}</div>
                                                     <div class="row-item">{{ child2.translation }}</div>
                                                     <div class="row-item percent">{{ child2.perf_by_user(current_user.id).accuracy_percentage }}%</div>
@@ -118,7 +118,7 @@
                                             {% if child.children.count() > 0 %}
                                                 <button class="toggle-children">↓</button>
                                             {% endif %}
-                                            <div class="chinese">{{ child.chinese }}</div>
+                                            <div class="chinese children">{{ child.chinese }}</div>
                                             {{ child.transcription }}
                                         </div>
                                         <div class="row-item">{{ child.translation }}</div>
@@ -129,7 +129,7 @@
                                                 <div class="table-row">
                                                     <div class="row-item">--></div>
                                                     <div class="row-item">
-                                                        <div class="chinese">{{ child2.chinese }}</div>
+                                                        <div class="chinese children">{{ child2.chinese }}</div>
                                                         {{ child2.transcription }}</div>
                                                     <div class="row-item">{{ child2.translation }}</div>
                                                 </div>

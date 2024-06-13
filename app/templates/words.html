@@ -78,7 +78,7 @@
                                     -->
                                 </div>
                                 <div class="row-item">
-                                    <div class="chinese">{{ child.chinese }}</div>
+                                    <div class="chinese children">{{ child.chinese }}</div>
                                     {{ child.transcription }}
                                 </div>
                                 <div class="row-item">{{ child.translation }}</div>
@@ -116,7 +116,7 @@
                                                 {% if child2.children.count() > 0 %}
                                                     <button class="toggle-children">↓</button>
                                                 {% endif %}
-                                                <div class="chinese">{{ child2.chinese }}</div>
+                                                <div class="chinese children">{{ child2.chinese }}</div>
                                                 {{ child2.transcription }}
                                             </div>
                                             <div class="row-item">{{ child2.translation }}</div>
