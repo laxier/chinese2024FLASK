@@ -1,7 +1,7 @@
 from app import app, db
 from app.models import Deck, character
 
-id = 16
+id = 24
 
 
 def main():

@@ -76,9 +76,12 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Stroke order</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div class="modal-body"></div>
+                <div class="modal-body">
+                </div>
             </div>
         </div>
     </div>
@@ -157,10 +160,6 @@
     });
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-        crossorigin="anonymous"></script>
-{#<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>#}
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <script>
     {% if current_user.is_authenticated %}
@@ -179,6 +178,8 @@
         })
     {% endif %}
 </script>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 <script>
     window.addEventListener('DOMContentLoaded', function () {
         const toggleButtons = document.querySelectorAll('.toggle-children');
@@ -191,86 +192,154 @@
                 button.textContent = children.style.display === 'none' ? '↓' : '↑'
             });
         });
-
         const rowItems = document.querySelectorAll('div.row-item');
+        let currentIndex = 0;
+        const chineseElements = Array.from(document.querySelectorAll('.chinese'));
         rowItems.forEach(rowItem => {
             const chineseElement = rowItem.querySelector('.chinese');
             if (chineseElement) {
                 rowItem.addEventListener('click', (event) => {
                     if (!event.target.closest('.toggle-children')) {
+                        currentIndex = chineseElements.indexOf(chineseElement);
                         const answer = chineseElement.textContent.trim();
-                        showModal(answer);
+                        showModal(answer, currentIndex, chineseElements);
                     }
                 });
             }
         });
+
+        function showModal(answer, index, chineseElements) {
+            var modalBody = document.querySelector('.modal-body');
+            modalBody.innerHTML = ''; // Очистка содержимого модального окна
+            modalBody.style.display = 'flex';
+            modalBody.style.flexDirection = 'column';
+            modalBody.style.flexWrap = 'nowrap';
+            modalBody.style.justifyContent = 'center';
+
+            const controlsContainer = document.createElement('div');
+            controlsContainer.classList.add('controls-container');
+            controlsContainer.innerHTML = `
+                    <button class="control-button prev-button">&lt;</button>
+                    <button class="control-button next-button">&gt;</button>
+                `;
+            modalBody.appendChild(controlsContainer);
+            const isDarkMode = localStorage.getItem('theme') === 'dark';
+            const strokeColor = isDarkMode ? '#ffffff' : '#333333';
+            const outlineColor = isDarkMode ? '#333333' : '#ffffff';
+
+            var characterContainer = document.createElement('div');
+            characterContainer.classList.add('character-container');
+            modalBody.appendChild(characterContainer);
+
+            var answers = answer.split('');
+            answers.forEach(function (char, idx) {
+                var charTargetId = 'character-target-' + (idx + 1);
+                var charDiv = document.createElement('div');
+                charDiv.id = charTargetId;
+                charDiv.style.width = '100px';
+                charDiv.style.height = '100px';
+                characterContainer.appendChild(charDiv);
+
+                var writer = HanziWriter.create(charTargetId, char, {
+                    width: 100,
+                    height: 100,
+                    padding: 5,
+                    strokeAnimationSpeed: 1.5,
+                    delayBetweenStrokes: 20,
+                    strokeColor: strokeColor,
+                    outlineColor: outlineColor,
+                });
+                charDiv.addEventListener('click', function () {
+                    writer.animateCharacter();
+                });
+            });
+
+            fetchTranslation(answer).then(function (data) {
+                // Очищаем старые pronounciationDiv и translateDiv, если они есть
+                pronounciationDiv = document.createElement('div');
+                pronounciationDiv.textContent = data.pronunciation;
+                pronounciationDiv.classList.add('character-container');
+                modalBody.appendChild(pronounciationDiv);
+
+                translateDiv = document.createElement('div');
+                translateDiv.textContent = data.translation;
+                translateDiv.classList.add('character-container');
+                modalBody.appendChild(translateDiv);
+            });
+
+            $('#modal').modal('show');
+
+            const prevButton = document.querySelector('.prev-button');
+            const nextButton = document.querySelector('.next-button');
+
+            if (index === 0) {
+                prevButton.style.display = 'none';
+            } else {
+                prevButton.style.display = 'block';
+            }
+
+            if (index === chineseElements.length - 1) {
+                nextButton.style.display = 'none';
+            } else {
+                nextButton.style.display = 'block';
+            }
+
+            prevButton?.addEventListener('click', prevHandler);
+            nextButton?.addEventListener('click', nextHandler);
+        }
+
+        function fetchTranslation(char) {
+            return fetch('/api/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'char': char})
+            })
+                .then(response => response.json())
+                .catch(error => console.error('Ошибка:', error));
+        }
+
+        const prevButton = document.querySelector('.prev-button');
+        const nextButton = document.querySelector('.next-button');
+
+        function prevHandler() {
+            if (currentIndex > 0) {
+                currentIndex = (currentIndex - 1 + chineseElements.length) % chineseElements.length;
+                showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements);
+            }
+        }
+
+        function nextHandler() {
+            if (currentIndex < chineseElements.length - 1) {
+                currentIndex = (currentIndex + 1) % chineseElements.length;
+                showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements);
+            }
+        }
+
+
+        function keyHandler(event) {
+            if (event.key === 'ArrowLeft') {
+                prevHandler();
+            } else if (event.key === 'ArrowRight') {
+                nextHandler();
+            }
+        }
+
+        // Удаляем старые обработчики событий, если они есть, и добавляем новые
+        {#document.removeEventListener('keydown', keyHandler);#}
+        {#document.addEventListener('keydown', keyHandler);#}
+        {##}
+        {#prevButton.removeEventListener('click', prevHandler);#}
+        {#nextButton.removeEventListener('click', nextHandler);#}
+        {##}
+        {#prevButton.addEventListener('click', prevHandler);#}
+        {#nextButton.addEventListener('click', nextHandler);#}
+
+        {#prevButton?.addEventListener('click', prevHandler);#}
+        {#nextButton?.addEventListener('click', nextHandler);#}
+
+        // Добавляем обработчик событий для клавиш
+        document.addEventListener('keydown', keyHandler);
     });
-
-    function showModal(answer) {
-        var modalBody = document.querySelector('.modal-body');
-        modalBody.style.display = 'flex';
-        modalBody.style.flexDirection = 'column';
-        modalBody.style.flexWrap = 'nowrap';
-        modalBody.style.justifyContent = 'center';
-
-        modalBody.innerHTML = '';
-        const isDarkMode = localStorage.getItem('theme') === 'dark';
-        const strokeColor = isDarkMode ? '#ffffff' : '#333333';
-        const outlineColor = isDarkMode ? '#333333' : '#ffffff';
-
-        var characterContainer = document.createElement('div');
-        characterContainer.classList.add('character-container');
-        modalBody.appendChild(characterContainer);
-
-        var answers = answer.split('');
-        answers.forEach(function (char, index) {
-            var charTargetId = 'character-target-' + (index + 1);
-            var charDiv = document.createElement('div');
-            charDiv.id = charTargetId;
-            charDiv.style.width = '100px';
-            charDiv.style.height = '100px';
-            characterContainer.appendChild(charDiv);
-
-
-            var writer = HanziWriter.create(charTargetId, char, {
-                width: 100,
-                height: 100,
-                padding: 5,
-                strokeAnimationSpeed: 1.5,
-                delayBetweenStrokes: 20,
-                strokeColor: strokeColor,
-                outlineColor: outlineColor,
-            });
-            charDiv.addEventListener('click', function () {
-                writer.animateCharacter();
-            });
-        });
-
-        fetchTranslation(answer).then(function (data) {
-            var pronounciationDiv = document.createElement('div');
-            pronounciationDiv.textContent = data.pronunciation;
-            pronounciationDiv.classList.add('character-container');
-            modalBody.appendChild(pronounciationDiv);
-
-            var translateDiv = document.createElement('div');
-            translateDiv.textContent = data.translation;
-            translateDiv.classList.add('character-container');
-            modalBody.appendChild(translateDiv);
-        });
-
-
-        $('#modal').modal('show');
-    }
-
-    function fetchTranslation(char) {
-        return fetch('/api/translate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({'char': char})
-        })
-            .then(response => response.json())
-            .catch(error => console.error('Ошибка:', error));
-    }
 </script>

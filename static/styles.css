@@ -435,6 +435,48 @@ main {
     border-top: var(--black-border);
 }
 
+.controls-container {
+    position: absolute;
+    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 1051; /* z-index выше, чем у модального окна */
+}
+
+.control-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    padding: 10px;
+    pointer-events: all;
+    cursor: pointer;
+}
+
+.prev-button {
+    margin-right: auto; /* Располагаем кнопку влево как можно дальше */
+}
+
+.next-button {
+    margin-left: auto; /* Располагаем кнопку вправо как можно дальше */
+}
+
+.modal.show + .controls-container {
+    display: flex; /* Показываем кнопки, когда модальное окно открыто */
+}
+
+.dark-theme .close {
+    float: right;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: white !important;
+    opacity: 0.8;
+}
+
 .dark-theme .pagination-container {
     display: flex;
     justify-content: center;
@@ -484,7 +526,8 @@ main {
 .descending {
     color: dimgray;
 }
-.dark-theme .sort-element{
+
+.dark-theme .sort-element {
     color: var(--bs-element-color) !important;
 }
 
@@ -727,6 +770,15 @@ main {
         /*overflow-wrap: break-word;*/
         /*word-wrap: break-word;*/
         /*word-break: break-word;*/
+    }
+
+    .control-button {
+        font-size: 1.5rem; /* Уменьшаем размер шрифта */
+        padding: 8px; /* Уменьшаем отступы */
+    }
+
+    .prev-button, .next-button {
+        padding: 8px 12px; /* Уменьшаем отступы по вертикали и горизонтали */
     }
 }
 
