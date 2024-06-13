@@ -198,20 +198,23 @@
         const rowItems = document.querySelectorAll('div.row-item');
         let currentIndex = 0;
         const chineseElements = Array.from(document.querySelectorAll('.chinese:not(.children)'));
+        let isChildClicked = false;
+
         rowItems.forEach(rowItem => {
             const chineseElement = rowItem.querySelector('.chinese');
             if (chineseElement) {
                 rowItem.addEventListener('click', (event) => {
                     if (!event.target.closest('.toggle-children')) {
                         currentIndex = chineseElements.indexOf(chineseElement);
+                        isChildClicked = chineseElement.classList.contains('children');
                         const answer = chineseElement.textContent.trim();
-                        showModal(answer, currentIndex, chineseElements);
+                        showModal(answer, currentIndex, chineseElements, isChildClicked);
                     }
                 });
             }
         });
 
-        function showModal(answer, index, chineseElements) {
+        function showModal(answer, index, chineseElements, isChildClicked) {
             var modalBody = document.querySelector('.modal-body');
             modalBody.innerHTML = ''; // Очистка содержимого модального окна
             modalBody.style.display = 'flex';
@@ -307,16 +310,37 @@
         const nextButton = document.querySelector('.next-button');
 
         function prevHandler() {
-            if (currentIndex > 0) {
-                currentIndex = (currentIndex - 1 + chineseElements.length) % chineseElements.length;
-                showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements);
+            if (isChildClicked) {
+                const currentElement = chineseElements[currentIndex];
+                if (currentElement) { // Добавлена проверка на существование currentElement
+                    const parent = currentElement.closest('.card-row');
+                    const siblings = Array.from(parent.querySelectorAll('.chinese.children'));
+                    currentIndex = (siblings.indexOf(currentElement) - 1 + siblings.length) % siblings.length;
+                    showModal(siblings[currentIndex].textContent.trim(), currentIndex, siblings, true);
+                }
+            } else {
+                if (currentIndex > 0) {
+                    currentIndex = (currentIndex - 1 + chineseElements.length) % chineseElements.length;
+                    showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements, false);
+                }
             }
         }
 
+
         function nextHandler() {
-            if (currentIndex < chineseElements.length - 1) {
-                currentIndex = (currentIndex + 1) % chineseElements.length;
-                showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements);
+            if (isChildClicked) {
+                const currentElement = chineseElements[currentIndex];
+                if (currentElement) { // Добавлена проверка на существование currentElement
+                    const parent = currentElement.closest('.card-row');
+                    const siblings = Array.from(parent.querySelectorAll('.chinese.children'));
+                    currentIndex = (siblings.indexOf(currentElement) + 1) % siblings.length;
+                    showModal(siblings[currentIndex].textContent.trim(), currentIndex, siblings, true);
+                }
+            } else {
+                if (currentIndex < chineseElements.length - 1) {
+                    currentIndex = (currentIndex + 1) % chineseElements.length;
+                    showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements, false);
+                }
             }
         }
 
