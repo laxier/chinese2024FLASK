@@ -1,3 +1,274 @@
+{#<script>#}
+{#    window.addEventListener('DOMContentLoaded', function () {#}
+{#        const toggleButtons = document.querySelectorAll('.toggle-children');#}
+{#console.log(toggleButtons)#}
+{#        toggleButtons.forEach(button => {#}
+{#            button.addEventListener('click', () => {#}
+{#                const parent = button.parentElement.parentElement;#}
+{#                const children = parent.nextElementSibling;#}
+{#                children.style.display = children.style.display === 'none' ? 'block' : 'none';#}
+{#                button.textContent = children.style.display === 'none' ? '↓' : '↑'#}
+{#            });#}
+{#        });#}
+{#        const percentHeader = document.querySelector('.heading .percent-header');#}
+{#        const dateHeader = document.querySelector('.heading .date-header');#}
+{#        percentHeader.addEventListener('click', sortByPercent);#}
+{#        dateHeader.addEventListener('click', sortByDate);#}
+{##}
+{#        function resetStyles() {#}
+{#            const percentHeader = document.querySelector('.percent-header');#}
+{#            const dateHeader = document.querySelector('.date-header');#}
+{##}
+{#            percentHeader.classList.remove('ascending', 'descending');#}
+{#            dateHeader.classList.remove('ascending', 'descending');#}
+{#        }#}
+{##}
+{#        let isPercentSortAscending = true;#}
+{##}
+{#        function sortByPercent() {#}
+{#            const tableContainer = document.querySelector('.table-container');#}
+{#            const heading = tableContainer.querySelector('.heading');#}
+{#            const cardRows = Array.from(tableContainer.querySelectorAll('.card-row'));#}
+{##}
+{#            cardRows.sort((a, b) => {#}
+{#                const aParentRow = a.querySelector('.parent');#}
+{#                const bParentRow = b.querySelector('.parent');#}
+{##}
+{#                const aPercent = parseFloat(aParentRow.querySelector('.percent').textContent.replace('%', ''));#}
+{#                const bPercent = parseFloat(bParentRow.querySelector('.percent').textContent.replace('%', ''));#}
+{##}
+{#                return isPercentSortAscending ? aPercent - bPercent : bPercent - aPercent;#}
+{#            });#}
+{##}
+{#            const fragment = document.createDocumentFragment();#}
+{##}
+{#            fragment.appendChild(heading);#}
+{##}
+{#            cardRows.forEach(cardRow => {#}
+{#                fragment.appendChild(cardRow);#}
+{#            });#}
+{##}
+{#            tableContainer.textContent = ''; // Clear the existing content#}
+{#            tableContainer.appendChild(fragment);#}
+{##}
+{#            resetStyles();#}
+{#            isPercentSortAscending = !isPercentSortAscending;#}
+{#            const percentHeader = document.querySelector('.heading .percent-header');#}
+{#            percentHeader.classList.remove('ascending', 'descending');#}
+{#            percentHeader.classList.add(isPercentSortAscending ? 'ascending' : 'descending');#}
+{#            chineseElements.length = 0;#}
+{#            chineseElements.push(...Array.from(document.querySelectorAll('.chinese:not(.children)')));#}
+{#            console.log(chineseElements)#}
+{#        }#}
+{##}
+{#        let isDateSortAscending = true;#}
+{##}
+{#        function sortByDate() {#}
+{#            const tableCont = document.querySelector('.table-container');#}
+{#            const heading = tableCont.querySelector('.heading');#}
+{#            const cardRows = Array.from(tableCont.querySelectorAll('.card-row'));#}
+{#            cardRows.sort((a, b) => {#}
+{#                const aParentRow = a.querySelector('.parent');#}
+{#                const bParentRow = b.querySelector('.parent');#}
+{##}
+{#                const aCardElement = aParentRow.querySelector('.chinese');#}
+{#                const bCardElement = bParentRow.querySelector('.chinese');#}
+{##}
+{#                const aCardId = aCardElement.textContent.trim();#}
+{#                const bCardId = bCardElement.textContent.trim();#}
+{##}
+{#                const deckData = JSON.parse('{{ deck_data|safe }}');#}
+{#                const aCard = deckData.cards.find(card => card.chinese === aCardId);#}
+{#                const bCard = deckData.cards.find(card => card.chinese === bCardId);#}
+{#                const aDate = new Date(aCard.performance.next_review_date);#}
+{#                const bDate = new Date(bCard.performance.next_review_date);#}
+{##}
+{#                // Sort by next_review_date in ascending order#}
+{#                return isDateSortAscending ? bDate - aDate : aDate - bDate;#}
+{#            });#}
+{##}
+{#            const tableContainer = document.querySelector('.table-container');#}
+{#            const fragment = document.createDocumentFragment();#}
+{##}
+{#            fragment.appendChild(heading);#}
+{##}
+{#            cardRows.forEach(cardRow => {#}
+{#                fragment.appendChild(cardRow);#}
+{#            });#}
+{##}
+{#            tableContainer.textContent = ''; // Clear the existing content#}
+{#            tableContainer.appendChild(fragment);#}
+{#            cardRows.forEach(row => tableContainer.appendChild(row));#}
+{##}
+{#            resetStyles();#}
+{#            isDateSortAscending = !isDateSortAscending;#}
+{#            const dateHeader = document.querySelector('.heading .date-header');#}
+{#            dateHeader.classList.remove('ascending', 'descending');#}
+{#            dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');#}
+{#            chineseElements.length = 0;#}
+{#            chineseElements.push(...Array.from(document.querySelectorAll('.chinese:not(.children)')));#}
+{#        }#}
+{##}
+{#        rowItems = document.querySelectorAll('div.row-item');#}
+{#        let currentIndex = 0;#}
+{#        const chineseElements = Array.from(document.querySelectorAll('.chinese:not(.children)'));#}
+{#        let isChildClicked = false;#}
+{##}
+{#        rowItems.forEach(rowItem => {#}
+{#            const chineseElement = rowItem.querySelector('.chinese');#}
+{#            if (chineseElement) {#}
+{#                rowItem.addEventListener('click', (event) => {#}
+{#                    if (!event.target.closest('.toggle-children')) {#}
+{#                        currentIndex = chineseElements.indexOf(chineseElement);#}
+{#                        isChildClicked = chineseElement.classList.contains('children');#}
+{#                        const answer = chineseElement.textContent.trim();#}
+{#                        showModal(answer, currentIndex, chineseElements, isChildClicked);#}
+{#                    }#}
+{#                });#}
+{#            }#}
+{#        });#}
+{##}
+{#        function showModal(answer, index, chineseElements, isChildClicked) {#}
+{#            var modalBody = document.querySelector('.modal-body');#}
+{#            modalBody.innerHTML = ''; // Очистка содержимого модального окна#}
+{#            modalBody.style.display = 'flex';#}
+{#            modalBody.style.flexDirection = 'column';#}
+{#            modalBody.style.flexWrap = 'nowrap';#}
+{#            modalBody.style.justifyContent = 'center';#}
+{##}
+{#            const controlsContainer = document.createElement('div');#}
+{#            controlsContainer.classList.add('controls-container');#}
+{#            controlsContainer.innerHTML = `#}
+{#                    <button class="control-button prev-button">&lt;</button>#}
+{#                    <button class="control-button next-button">&gt;</button>#}
+{#                `;#}
+{#            modalBody.appendChild(controlsContainer);#}
+{#            const isDarkMode = localStorage.getItem('theme') === 'dark';#}
+{#            const strokeColor = isDarkMode ? '#ffffff' : '#333333';#}
+{#            const outlineColor = isDarkMode ? '#333333' : '#ffffff';#}
+{##}
+{#            var characterContainer = document.createElement('div');#}
+{#            characterContainer.classList.add('character-container');#}
+{#            modalBody.appendChild(characterContainer);#}
+{##}
+{#            var answers = answer.split('');#}
+{#            answers.forEach(function (char, idx) {#}
+{#                var charTargetId = 'character-target-' + (idx + 1);#}
+{#                var charDiv = document.createElement('div');#}
+{#                charDiv.id = charTargetId;#}
+{#                charDiv.style.width = '100px';#}
+{#                charDiv.style.height = '100px';#}
+{#                characterContainer.appendChild(charDiv);#}
+{##}
+{#                var writer = HanziWriter.create(charTargetId, char, {#}
+{#                    width: 100,#}
+{#                    height: 100,#}
+{#                    padding: 5,#}
+{#                    strokeAnimationSpeed: 1.5,#}
+{#                    delayBetweenStrokes: 20,#}
+{#                    strokeColor: strokeColor,#}
+{#                    outlineColor: outlineColor,#}
+{#                });#}
+{#                charDiv.addEventListener('click', function () {#}
+{#                    writer.animateCharacter();#}
+{#                });#}
+{#            });#}
+{##}
+{#            fetchTranslation(answer).then(function (data) {#}
+{#                // Очищаем старые pronounciationDiv и translateDiv, если они есть#}
+{#                pronounciationDiv = document.createElement('div');#}
+{#                pronounciationDiv.textContent = data.pronunciation;#}
+{#                pronounciationDiv.classList.add('character-container');#}
+{#                modalBody.appendChild(pronounciationDiv);#}
+{##}
+{#                translateDiv = document.createElement('div');#}
+{#                translateDiv.textContent = data.translation;#}
+{#                translateDiv.classList.add('character-container');#}
+{#                modalBody.appendChild(translateDiv);#}
+{#            });#}
+{##}
+{#            $('#modal').modal('show');#}
+{##}
+{#            const prevButton = document.querySelector('.prev-button');#}
+{#            const nextButton = document.querySelector('.next-button');#}
+{##}
+{#            if (index === 0) {#}
+{#                prevButton.style.display = 'none';#}
+{#            } else {#}
+{#                prevButton.style.display = 'block';#}
+{#            }#}
+{##}
+{#            if (index === chineseElements.length - 1) {#}
+{#                nextButton.style.display = 'none';#}
+{#            } else {#}
+{#                nextButton.style.display = 'block';#}
+{#            }#}
+{##}
+{#            prevButton?.addEventListener('click', prevHandler);#}
+{#            nextButton?.addEventListener('click', nextHandler);#}
+{#        }#}
+{##}
+{#        function fetchTranslation(char) {#}
+{#            return fetch('/api/translate', {#}
+{#                method: 'POST',#}
+{#                headers: {#}
+{#                    'Content-Type': 'application/json'#}
+{#                },#}
+{#                body: JSON.stringify({'char': char})#}
+{#            })#}
+{#                .then(response => response.json())#}
+{#                .catch(error => console.error('Ошибка:', error));#}
+{#        }#}
+{##}
+{#const prevButton = document.querySelector('.prev-button');#}
+{#const nextButton = document.querySelector('.next-button');#}
+{##}
+{#        function prevHandler() {#}
+{#            if (isChildClicked) {#}
+{#                const currentElement = chineseElements[currentIndex];#}
+{#                if (currentElement) { // Добавлена проверка на существование currentElement#}
+{#                    const parent = currentElement.closest('.card-row');#}
+{#                    const siblings = Array.from(parent.querySelectorAll('.chinese.children'));#}
+{#                    currentIndex = (siblings.indexOf(currentElement) - 1 + siblings.length) % siblings.length;#}
+{#                    showModal(siblings[currentIndex].textContent.trim(), currentIndex, siblings, true);#}
+{#                }#}
+{#            } else {#}
+{#                if (currentIndex > 0) {#}
+{#                    currentIndex = (currentIndex - 1 + chineseElements.length) % chineseElements.length;#}
+{#                    showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements, false);#}
+{#                }#}
+{#            }#}
+{#        }#}
+{##}
+{#        function nextHandler() {#}
+{#            if (isChildClicked) {#}
+{#                const currentElement = chineseElements[currentIndex];#}
+{#                if (currentElement) { // Добавлена проверка на существование currentElement#}
+{#                    const parent = currentElement.closest('.card-row');#}
+{#                    const siblings = Array.from(parent.querySelectorAll('.chinese.children'));#}
+{#                    currentIndex = (siblings.indexOf(currentElement) + 1) % siblings.length;#}
+{#                    showModal(siblings[currentIndex].textContent.trim(), currentIndex, siblings, true);#}
+{#                }#}
+{#            } else {#}
+{#                if (currentIndex < chineseElements.length - 1) {#}
+{#                    currentIndex = (currentIndex + 1) % chineseElements.length;#}
+{#                    showModal(chineseElements[currentIndex].textContent.trim(), currentIndex, chineseElements, false);#}
+{#                }#}
+{#            }#}
+{#        }#}
+{##}
+{##}
+{#        function keyHandler(event) {#}
+{#            if (event.key === 'ArrowLeft') {#}
+{#                prevHandler();#}
+{#            } else if (event.key === 'ArrowRight') {#}
+{#                nextHandler();#}
+{#            }#}
+{#        }#}
+{##}
+{#        document.addEventListener('keydown', keyHandler);#}
+{#    });#}
+{#</script>#}
 {% extends "base.html" %}
 {% block content %}
     <div class="container">
@@ -162,15 +433,13 @@
     </div>
 {% endblock %}
 
-{% block scripts %}
-    <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            const percentHeader = document.querySelector('.heading .percent-header');
-            const dateHeader = document.querySelector('.heading .date-header');
+<script>
+    {% block sort %}
 
-            percentHeader.addEventListener('click', sortByPercent);
-            dateHeader.addEventListener('click', sortByDate);
-        });
+        const percentHeader = document.querySelector('.heading .percent-header');
+        const dateHeader = document.querySelector('.heading .date-header');
+        percentHeader.addEventListener('click', sortByPercent);
+        dateHeader.addEventListener('click', sortByDate);
 
         function resetStyles() {
             const percentHeader = document.querySelector('.percent-header');
@@ -213,6 +482,9 @@
             const percentHeader = document.querySelector('.heading .percent-header');
             percentHeader.classList.remove('ascending', 'descending');
             percentHeader.classList.add(isPercentSortAscending ? 'ascending' : 'descending');
+            chineseElements.length = 0;
+            chineseElements.push(...Array.from(document.querySelectorAll('.chinese:not(.children)')));
+            console.log(chineseElements)
         }
 
         let isDateSortAscending = true;
@@ -241,6 +513,7 @@
                 return isDateSortAscending ? bDate - aDate : aDate - bDate;
             });
 
+
             const tableContainer = document.querySelector('.table-container');
             const fragment = document.createDocumentFragment();
 
@@ -259,176 +532,177 @@
             const dateHeader = document.querySelector('.heading .date-header');
             dateHeader.classList.remove('ascending', 'descending');
             dateHeader.classList.add(isDateSortAscending ? 'ascending' : 'descending');
-        }
-    </script>
-
-    {% if current_user.is_authenticated %}
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-        <script>
-            let myChart;
-            window.addEventListener("load", function () {
-                fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        const chartData = {
-                            labels: data.dates,
-                            datasets: [{
-                                label: 'Процент правильных ответов',
-                                data: data.percentages,
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 1
-                            }]
-                        };
-                        const body = document.body;
-                        const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                        const ctx = document.getElementById('myChart').getContext('2d');
-                        myChart = new Chart(ctx, {
-                            type: 'bar',
-                            data: chartData,
-                            options: {
-                                minBarLength: 5,
-                                maxBarThickness: 30,
-                                scales: {
-                                    x: {
-                                        grid: {
-                                            color: gridColor
-                                        }
-                                    },
-                                    y: {
-                                        grid: {
-                                            color: gridColor
-                                        },
-                                        beginAtZero: true,
-                                        max: Math.max(100, ...data.percentages) + 10,
-                                        {#max: 110#}
+            chineseElements.length = 0;
+            chineseElements.push(...Array.from(document.querySelectorAll('.chinese:not(.children)')));
+        };
+    {% endblock %}
+</script>
+{% if current_user.is_authenticated %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <script>
+        let myChart;
+        window.addEventListener("load", function () {
+            fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
+                .then(response => response.json())
+                .then(data => {
+                    const chartData = {
+                        labels: data.dates,
+                        datasets: [{
+                            label: 'Процент правильных ответов',
+                            data: data.percentages,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    };
+                    const body = document.body;
+                    const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                    const ctx = document.getElementById('myChart').getContext('2d');
+                    myChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            minBarLength: 5,
+                            maxBarThickness: 30,
+                            scales: {
+                                x: {
+                                    grid: {
+                                        color: gridColor
                                     }
+                                },
+                                y: {
+                                    grid: {
+                                        color: gridColor
+                                    },
+                                    beginAtZero: true,
+                                    max: Math.max(100, ...data.percentages) + 10,
+                                    {#max: 110#}
                                 }
                             }
-                        });
-                        document.getElementById('chart-container').style.display = 'block';
-
-                        myChart.canvas.addEventListener('click', function (event) {
-                            const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
-                            const firstPoint = activePoints[0];
-                            if (firstPoint) {
-                                const id = data.id[firstPoint.index];
-                                const date = data.dates[firstPoint.index];
-                                const percentage = data.percentages[firstPoint.index];
-                                const wrongAnswers = data.wrongAnswers[firstPoint.index];
-                                const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
-                                const infoContainer = document.getElementById('info-container');
-                                infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы:`;
-
-                                // Отображение модального окна при нажатии на неправильный ответ
-                                const answersArray = wrongAnswers.split(', ');
-                                answersArray.forEach(answer => {
-                                    const answerElement = document.createElement('a');
-                                    answerElement.textContent = answer;
-                                    answerElement.classList.add('answer-link');
-                                    answerElement.addEventListener('click', () => showModal(answer));
-                                    infoContainer.appendChild(answerElement);
-                                    infoContainer.appendChild(document.createTextNode(', '));
-                                });
-                                const brElement = document.createElement('br');
-                                const deleteLink = document.createElement('a');
-                                deleteLink.href = deleteUrl;
-                                deleteLink.textContent = 'Удалить';
-                                infoContainer.appendChild(brElement);
-                                infoContainer.appendChild(deleteLink);
-                            }
-                        });
+                        }
                     });
+                    document.getElementById('chart-container').style.display = 'block';
+
+                    myChart.canvas.addEventListener('click', function (event) {
+                        const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
+                        const firstPoint = activePoints[0];
+                        if (firstPoint) {
+                            const id = data.id[firstPoint.index];
+                            const date = data.dates[firstPoint.index];
+                            const percentage = data.percentages[firstPoint.index];
+                            const wrongAnswers = data.wrongAnswers[firstPoint.index];
+                            const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
+                            const infoContainer = document.getElementById('info-container');
+                            infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы:`;
+
+                            // Отображение модального окна при нажатии на неправильный ответ
+                            const answersArray = wrongAnswers.split(', ');
+                            answersArray.forEach(answer => {
+                                const answerElement = document.createElement('a');
+                                answerElement.textContent = answer;
+                                answerElement.classList.add('answer-link');
+                                answerElement.addEventListener('click', () => showModal(answer));
+                                infoContainer.appendChild(answerElement);
+                                infoContainer.appendChild(document.createTextNode(', '));
+                            });
+                            const brElement = document.createElement('br');
+                            const deleteLink = document.createElement('a');
+                            deleteLink.href = deleteUrl;
+                            deleteLink.textContent = 'Удалить';
+                            infoContainer.appendChild(brElement);
+                            infoContainer.appendChild(deleteLink);
+                        }
+                    });
+                });
+        });
+
+        function showModal(answer) {
+            var modalBody = document.querySelector('.modal-body');
+            modalBody.style.display = 'flex';
+            modalBody.style.flexDirection = 'column';
+            modalBody.style.flexWrap = 'nowrap';
+            modalBody.style.justifyContent = 'center';
+
+            modalBody.innerHTML = '';
+            const isDarkMode = localStorage.getItem('theme') === 'dark';
+            const strokeColor = isDarkMode ? '#ffffff' : '#333333';
+            const outlineColor = isDarkMode ? '#333333' : '#ffffff';
+
+            var characterContainer = document.createElement('div');
+            characterContainer.classList.add('character-container');
+            modalBody.appendChild(characterContainer);
+
+            var answers = answer.split('');
+            answers.forEach(function (char, index) {
+                var charTargetId = 'character-target-' + (index + 1);
+                var charDiv = document.createElement('div');
+                charDiv.id = charTargetId;
+                charDiv.style.width = '100px';
+                charDiv.style.height = '100px';
+                characterContainer.appendChild(charDiv);
+
+                var writer = HanziWriter.create(charTargetId, char, {
+                    width: 100,
+                    height: 100,
+                    padding: 5,
+                    strokeAnimationSpeed: 1.5,
+                    delayBetweenStrokes: 20,
+                    strokeColor: strokeColor,
+                    outlineColor: outlineColor,
+                });
+                charDiv.addEventListener('click', function () {
+                    writer.animateCharacter();
+                });
             });
 
-            function showModal(answer) {
-                var modalBody = document.querySelector('.modal-body');
-                modalBody.style.display = 'flex';
-                modalBody.style.flexDirection = 'column';
-                modalBody.style.flexWrap = 'nowrap';
-                modalBody.style.justifyContent = 'center';
-
-                modalBody.innerHTML = '';
-                const isDarkMode = localStorage.getItem('theme') === 'dark';
-                const strokeColor = isDarkMode ? '#ffffff' : '#333333';
-                const outlineColor = isDarkMode ? '#333333' : '#ffffff';
-
-                var characterContainer = document.createElement('div');
-                characterContainer.classList.add('character-container');
-                modalBody.appendChild(characterContainer);
-
-                var answers = answer.split('');
-                answers.forEach(function (char, index) {
-                    var charTargetId = 'character-target-' + (index + 1);
-                    var charDiv = document.createElement('div');
-                    charDiv.id = charTargetId;
-                    charDiv.style.width = '100px';
-                    charDiv.style.height = '100px';
-                    characterContainer.appendChild(charDiv);
-
-                    var writer = HanziWriter.create(charTargetId, char, {
-                        width: 100,
-                        height: 100,
-                        padding: 5,
-                        strokeAnimationSpeed: 1.5,
-                        delayBetweenStrokes: 20,
-                        strokeColor: strokeColor,
-                        outlineColor: outlineColor,
-                    });
-                    charDiv.addEventListener('click', function () {
-                        writer.animateCharacter();
-                    });
-                });
-
-                fetchTranslation(answer).then(function (data) {
-                    var translateDiv = document.createElement('div');
-                    translateDiv.textContent = data.translation;
-                    translateDiv.classList.add('character-container');
-                    modalBody.appendChild(translateDiv);
-                });
+            fetchTranslation(answer).then(function (data) {
+                var translateDiv = document.createElement('div');
+                translateDiv.textContent = data.translation;
+                translateDiv.classList.add('character-container');
+                modalBody.appendChild(translateDiv);
+            });
 
 
-                $('#modal').modal('show');
+            $('#modal').modal('show');
+        }
+
+        function fetchTranslation(char) {
+            return fetch('/api/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'char': char})
+            })
+                .then(response => response.json())
+                .catch(error => console.error('Ошибка:', error));
+        }
+
+        var themeSwitch = document.querySelector('[data-theme-toggle]');
+        if (themeSwitch) {
+            themeSwitch.addEventListener('change', function () {
+                toggleThemeGraph();
+            });
+        }
+
+        function updateChartGridColor(color) {
+            myChart.options.scales.x.grid.color = color;
+            myChart.options.scales.y.grid.color = color;
+            myChart.update();
+        }
+
+        function toggleThemeGraph() {
+            const body = document.body;
+            const isDarkMode = localStorage.getItem('theme') === 'dark';
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            if (body.classList.contains('light-theme')) {
+                updateChartGridColor(gridColor);
+            } else {
+                updateChartGridColor(gridColor);
             }
-
-            function fetchTranslation(char) {
-                return fetch('/api/translate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({'char': char})
-                })
-                    .then(response => response.json())
-                    .catch(error => console.error('Ошибка:', error));
-            }
-
-            var themeSwitch = document.querySelector('[data-theme-toggle]');
-            if (themeSwitch) {
-                themeSwitch.addEventListener('change', function () {
-                    toggleThemeGraph();
-                });
-            }
-
-            function updateChartGridColor(color) {
-                myChart.options.scales.x.grid.color = color;
-                myChart.options.scales.y.grid.color = color;
-                myChart.update();
-            }
-
-            function toggleThemeGraph() {
-                const body = document.body;
-                const isDarkMode = localStorage.getItem('theme') === 'dark';
-                const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                if (body.classList.contains('light-theme')) {
-                    updateChartGridColor(gridColor);
-                } else {
-                    updateChartGridColor(gridColor);
-                }
-            }
-        </script>
-    {% endif %}
-{% endblock %}
+        }
+    </script>
+{% endif %}

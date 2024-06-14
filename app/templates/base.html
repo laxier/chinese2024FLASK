@@ -185,6 +185,8 @@
 
 <script>
     window.addEventListener('DOMContentLoaded', function () {
+        {% block sort %}
+        {% endblock %}
         const toggleButtons = document.querySelectorAll('.toggle-children');
         console.log(toggleButtons)
         toggleButtons.forEach(button => {
@@ -195,7 +197,7 @@
                 button.textContent = children.style.display === 'none' ? '↓' : '↑'
             });
         });
-        const rowItems = document.querySelectorAll('div.row-item');
+        rowItems = document.querySelectorAll('div.row-item');
         let currentIndex = 0;
         const chineseElements = Array.from(document.querySelectorAll('.chinese:not(.children)'));
         let isChildClicked = false;
@@ -352,21 +354,6 @@
                 nextHandler();
             }
         }
-
-        // Удаляем старые обработчики событий, если они есть, и добавляем новые
-        {#document.removeEventListener('keydown', keyHandler);#}
-        {#document.addEventListener('keydown', keyHandler);#}
-        {##}
-        {#prevButton.removeEventListener('click', prevHandler);#}
-        {#nextButton.removeEventListener('click', nextHandler);#}
-        {##}
-        {#prevButton.addEventListener('click', prevHandler);#}
-        {#nextButton.addEventListener('click', nextHandler);#}
-
-        {#prevButton?.addEventListener('click', prevHandler);#}
-        {#nextButton?.addEventListener('click', nextHandler);#}
-
-        // Добавляем обработчик событий для клавиш
         document.addEventListener('keydown', keyHandler);
     });
 </script>
