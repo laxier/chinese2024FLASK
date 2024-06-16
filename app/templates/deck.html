@@ -537,172 +537,175 @@
         };
     {% endblock %}
 </script>
-{% if current_user.is_authenticated %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-    <script>
-        let myChart;
-        window.addEventListener("load", function () {
-            fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
-                .then(response => response.json())
-                .then(data => {
-                    const chartData = {
-                        labels: data.dates,
-                        datasets: [{
-                            label: 'Процент правильных ответов',
-                            data: data.percentages,
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }]
-                    };
-                    const body = document.body;
-                    const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                    const ctx = document.getElementById('myChart').getContext('2d');
-                    myChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: chartData,
-                        options: {
-                            minBarLength: 5,
-                            maxBarThickness: 30,
-                            scales: {
-                                x: {
-                                    grid: {
-                                        color: gridColor
-                                    }
-                                },
-                                y: {
-                                    grid: {
-                                        color: gridColor
+
+{% block graph %}
+    {% if current_user.is_authenticated %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+        <script>
+            let myChart;
+            window.addEventListener("load", function () {
+                fetch('/get-performance-data/{{ deck.id }}/{{ current_user.id }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const chartData = {
+                            labels: data.dates,
+                            datasets: [{
+                                label: 'Процент правильных ответов',
+                                data: data.percentages,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        };
+                        const body = document.body;
+                        const gridColor = (body.classList.contains('dark-theme')) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                        const ctx = document.getElementById('myChart').getContext('2d');
+                        myChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: chartData,
+                            options: {
+                                minBarLength: 5,
+                                maxBarThickness: 30,
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            color: gridColor
+                                        }
                                     },
-                                    beginAtZero: true,
-                                    max: Math.max(100, ...data.percentages) + 10,
-                                    {#max: 110#}
+                                    y: {
+                                        grid: {
+                                            color: gridColor
+                                        },
+                                        beginAtZero: true,
+                                        max: Math.max(100, ...data.percentages) + 10,
+                                        {#max: 110#}
+                                    }
                                 }
                             }
-                        }
+                        });
+                        document.getElementById('chart-container').style.display = 'block';
+
+                        myChart.canvas.addEventListener('click', function (event) {
+                            const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
+                            const firstPoint = activePoints[0];
+                            if (firstPoint) {
+                                const id = data.id[firstPoint.index];
+                                const date = data.dates[firstPoint.index];
+                                const percentage = data.percentages[firstPoint.index];
+                                const wrongAnswers = data.wrongAnswers[firstPoint.index];
+                                const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
+                                const infoContainer = document.getElementById('info-container');
+                                infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы:`;
+
+                                // Отображение модального окна при нажатии на неправильный ответ
+                                const answersArray = wrongAnswers.split(', ');
+                                answersArray.forEach(answer => {
+                                    const answerElement = document.createElement('a');
+                                    answerElement.textContent = answer;
+                                    answerElement.classList.add('answer-link');
+                                    answerElement.addEventListener('click', () => showModal(answer));
+                                    infoContainer.appendChild(answerElement);
+                                    infoContainer.appendChild(document.createTextNode(', '));
+                                });
+                                const brElement = document.createElement('br');
+                                const deleteLink = document.createElement('a');
+                                deleteLink.href = deleteUrl;
+                                deleteLink.textContent = 'Удалить';
+                                infoContainer.appendChild(brElement);
+                                infoContainer.appendChild(deleteLink);
+                            }
+                        });
                     });
-                    document.getElementById('chart-container').style.display = 'block';
+            });
 
-                    myChart.canvas.addEventListener('click', function (event) {
-                        const activePoints = myChart.getElementsAtEventForMode(event, 'index', {intersect: true}, true);
-                        const firstPoint = activePoints[0];
-                        if (firstPoint) {
-                            const id = data.id[firstPoint.index];
-                            const date = data.dates[firstPoint.index];
-                            const percentage = data.percentages[firstPoint.index];
-                            const wrongAnswers = data.wrongAnswers[firstPoint.index];
-                            const deleteUrl = `{{ url_for('delete_deck_perf', perf_id='__ID__', deck_id=deck.id) }}`.replace('__ID__', id);
-                            const infoContainer = document.getElementById('info-container');
-                            infoContainer.innerHTML = `Дата: ${date}, Процент: ${percentage}%, Неправильные ответы:`;
+            function showModal(answer) {
+                var modalBody = document.querySelector('.modal-body');
+                modalBody.style.display = 'flex';
+                modalBody.style.flexDirection = 'column';
+                modalBody.style.flexWrap = 'nowrap';
+                modalBody.style.justifyContent = 'center';
 
-                            // Отображение модального окна при нажатии на неправильный ответ
-                            const answersArray = wrongAnswers.split(', ');
-                            answersArray.forEach(answer => {
-                                const answerElement = document.createElement('a');
-                                answerElement.textContent = answer;
-                                answerElement.classList.add('answer-link');
-                                answerElement.addEventListener('click', () => showModal(answer));
-                                infoContainer.appendChild(answerElement);
-                                infoContainer.appendChild(document.createTextNode(', '));
-                            });
-                            const brElement = document.createElement('br');
-                            const deleteLink = document.createElement('a');
-                            deleteLink.href = deleteUrl;
-                            deleteLink.textContent = 'Удалить';
-                            infoContainer.appendChild(brElement);
-                            infoContainer.appendChild(deleteLink);
-                        }
+                modalBody.innerHTML = '';
+                const isDarkMode = localStorage.getItem('theme') === 'dark';
+                const strokeColor = isDarkMode ? '#ffffff' : '#333333';
+                const outlineColor = isDarkMode ? '#333333' : '#ffffff';
+
+                var characterContainer = document.createElement('div');
+                characterContainer.classList.add('character-container');
+                modalBody.appendChild(characterContainer);
+
+                var answers = answer.split('');
+                answers.forEach(function (char, index) {
+                    var charTargetId = 'character-target-' + (index + 1);
+                    var charDiv = document.createElement('div');
+                    charDiv.id = charTargetId;
+                    charDiv.style.width = '100px';
+                    charDiv.style.height = '100px';
+                    characterContainer.appendChild(charDiv);
+
+                    var writer = HanziWriter.create(charTargetId, char, {
+                        width: 100,
+                        height: 100,
+                        padding: 5,
+                        strokeAnimationSpeed: 1.5,
+                        delayBetweenStrokes: 20,
+                        strokeColor: strokeColor,
+                        outlineColor: outlineColor,
+                    });
+                    charDiv.addEventListener('click', function () {
+                        writer.animateCharacter();
                     });
                 });
-        });
 
-        function showModal(answer) {
-            var modalBody = document.querySelector('.modal-body');
-            modalBody.style.display = 'flex';
-            modalBody.style.flexDirection = 'column';
-            modalBody.style.flexWrap = 'nowrap';
-            modalBody.style.justifyContent = 'center';
-
-            modalBody.innerHTML = '';
-            const isDarkMode = localStorage.getItem('theme') === 'dark';
-            const strokeColor = isDarkMode ? '#ffffff' : '#333333';
-            const outlineColor = isDarkMode ? '#333333' : '#ffffff';
-
-            var characterContainer = document.createElement('div');
-            characterContainer.classList.add('character-container');
-            modalBody.appendChild(characterContainer);
-
-            var answers = answer.split('');
-            answers.forEach(function (char, index) {
-                var charTargetId = 'character-target-' + (index + 1);
-                var charDiv = document.createElement('div');
-                charDiv.id = charTargetId;
-                charDiv.style.width = '100px';
-                charDiv.style.height = '100px';
-                characterContainer.appendChild(charDiv);
-
-                var writer = HanziWriter.create(charTargetId, char, {
-                    width: 100,
-                    height: 100,
-                    padding: 5,
-                    strokeAnimationSpeed: 1.5,
-                    delayBetweenStrokes: 20,
-                    strokeColor: strokeColor,
-                    outlineColor: outlineColor,
+                fetchTranslation(answer).then(function (data) {
+                    var translateDiv = document.createElement('div');
+                    translateDiv.textContent = data.translation;
+                    translateDiv.classList.add('character-container');
+                    modalBody.appendChild(translateDiv);
                 });
-                charDiv.addEventListener('click', function () {
-                    writer.animateCharacter();
-                });
-            });
-
-            fetchTranslation(answer).then(function (data) {
-                var translateDiv = document.createElement('div');
-                translateDiv.textContent = data.translation;
-                translateDiv.classList.add('character-container');
-                modalBody.appendChild(translateDiv);
-            });
 
 
-            $('#modal').modal('show');
-        }
-
-        function fetchTranslation(char) {
-            return fetch('/api/translate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({'char': char})
-            })
-                .then(response => response.json())
-                .catch(error => console.error('Ошибка:', error));
-        }
-
-        var themeSwitch = document.querySelector('[data-theme-toggle]');
-        if (themeSwitch) {
-            themeSwitch.addEventListener('change', function () {
-                toggleThemeGraph();
-            });
-        }
-
-        function updateChartGridColor(color) {
-            myChart.options.scales.x.grid.color = color;
-            myChart.options.scales.y.grid.color = color;
-            myChart.update();
-        }
-
-        function toggleThemeGraph() {
-            const body = document.body;
-            const isDarkMode = localStorage.getItem('theme') === 'dark';
-            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            if (body.classList.contains('light-theme')) {
-                updateChartGridColor(gridColor);
-            } else {
-                updateChartGridColor(gridColor);
+                $('#modal').modal('show');
             }
-        }
-    </script>
-{% endif %}
+
+            function fetchTranslation(char) {
+                return fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({'char': char})
+                })
+                    .then(response => response.json())
+                    .catch(error => console.error('Ошибка:', error));
+            }
+
+            var themeSwitch = document.querySelector('[data-theme-toggle]');
+            if (themeSwitch) {
+                themeSwitch.addEventListener('change', function () {
+                    toggleThemeGraph();
+                });
+            }
+
+            function updateChartGridColor(color) {
+                myChart.options.scales.x.grid.color = color;
+                myChart.options.scales.y.grid.color = color;
+                myChart.update();
+            }
+
+            function toggleThemeGraph() {
+                const body = document.body;
+                const isDarkMode = localStorage.getItem('theme') === 'dark';
+                const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                if (body.classList.contains('light-theme')) {
+                    updateChartGridColor(gridColor);
+                } else {
+                    updateChartGridColor(gridColor);
+                }
+            }
+        </script>
+    {% endif %}
+{% endblock %}
