@@ -3,11 +3,11 @@ from app.models import Deck, character
 import threading
 from sqlalchemy import exc
 from tqdm import tqdm
-
+from chinese_tools import searchWord, decomposeWord
 # requires selenium==4.20.0
 MAX_THREADS = 5
 semaphore = threading.Semaphore(MAX_THREADS)
-id = 24
+id = 34
 
 def process_element(element):
     with app.app_context():
@@ -61,3 +61,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# print(decomposeWord("同"))

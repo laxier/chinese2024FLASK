@@ -71,7 +71,6 @@ def managed_driver():
 
 def decomposeWord(char):
     start_time = time.time()
-
     try:
         with managed_driver() as driver:
             # print("opened character", char)

@@ -347,6 +347,10 @@ class CardPerformance(db.Model):
             if self.accuracy_percentage >= 80:
                 quality = 1
 
+            if self.repetitions >= 7 and self.accuracy_percentage <= 86:
+                self.repetitions = 1
+                quality = 1
+
             interval = self.calculate_interval(self.repetitions, quality)
             self.edited = datetime.now(timezone.utc)
             self.next_review_date = datetime.now(timezone.utc) + timedelta(days=interval)
