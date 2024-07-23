@@ -7,7 +7,7 @@ from chinese_tools import searchWord, decomposeWord
 # requires selenium==4.20.0
 MAX_THREADS = 5
 semaphore = threading.Semaphore(MAX_THREADS)
-id = 42
+id = 43
 
 
 def main():
