@@ -108,11 +108,44 @@ class Card(db.Model):
                 }
             }
 
+    # def children_poisk(self):
+    #     log = ""
+    #     if len(self.chinese) > 1:
+    #         for element in self.chinese:
+    #             if element:
+    #                 log += f"\n{element}"
+    #                 query = sa.select(Card).filter_by(chinese=element)
+    #                 element_card = db.session.scalar(query)
+    #                 if element_card not in self.children:
+    #                     if not (element_card):
+    #                         element_card = Card(chinese=element)
+    #                         db.session.add(element_card)
+    #                     self.children.add(element_card)
+    #                     log += " связь создана"
+    #                 else:
+    #                     log += " связь уже существует"
+    #         return [1], log
+    #     else:
+    #         query = sa.select(character).filter_by(chinese=self.chinese)
+    #         new = db.session.scalar(query)
+    #         if new:
+    #             log += new.chinese + " = "
+    #             for child in new.children:
+    #                 log += child.chinese
+    #             return [new, new.children], log
+    #         else:
+    #             return [0], "Данное слово не поддерживается"
+
     def children_poisk(self):
         log = ""
         if len(self.chinese) > 1:
-            # Используем jieba для сегментации текста
-            segments = jieba.cut(self.chinese)
+            # Use Jieba to segment the phrase
+            segments = list(jieba.cut(self.chinese))
+
+            # If Jieba didn't split the word (like with 什么), we'll split it manually
+            if len(segments) == 1:
+                segments = list(self.chinese)
+
             for segment in segments:
                 log += f"\n{segment}"
                 query = sa.select(Card).filter_by(chinese=segment)
@@ -127,7 +160,7 @@ class Card(db.Model):
                     log += " связь уже существует"
             return [1], log
         else:
-            # Если это один иероглиф, просто возвращаем его
+            # For single characters, use the original logic
             query = sa.select(character).filter_by(chinese=self.chinese)
             new = db.session.scalar(query)
             if new:
