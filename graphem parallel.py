@@ -7,14 +7,18 @@ from chinese_tools import searchWord, decomposeWord
 # requires selenium==4.20.0
 MAX_THREADS = 5
 semaphore = threading.Semaphore(MAX_THREADS)
-id = 43
+id = 64
+# Characters to process: {'复',} 59
+# Characters to process: {'乡'} 61
+# Characters to process: {'亮', '复', '月'} 62
+#
+#
 
 
 def main():
     with app.app_context():
         try:
             deck = Deck.query.get_or_404(id)
-
             # Pre-filter characters that need processing
             characters_to_process = set()
             for card in deck.cards:

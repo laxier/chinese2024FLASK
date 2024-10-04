@@ -64,6 +64,8 @@ class Card(db.Model):
     chinese: so.Mapped[str] = so.mapped_column(sa.String(100), unique=True)
     transcription: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200))
     translation: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200))
+    hsk_level: so.Mapped[Optional[int]] = so.mapped_column(sa.Integer)
+
     decks: so.Mapped[Set["Deck"]] = so.relationship(secondary='deck_cards', back_populates='cards')
     card_performance: so.Mapped[Set["CardPerformance"]] = so.relationship(back_populates="card",
                                                                           cascade="all, delete-orphan",
