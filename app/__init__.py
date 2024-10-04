@@ -4,9 +4,8 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bootstrap import Bootstrap5
-import json
-from app import routes, models
 import os
+import json
 
 app = Flask(__name__)
 
@@ -21,6 +20,7 @@ db = SQLAlchemy(app)
 login = LoginManager(app)
 login.login_view = 'login'
 
+
 @app.template_filter('from_json')
 def from_json(json_string):
     """Convert a JSON string to a Python object."""
@@ -28,3 +28,6 @@ def from_json(json_string):
         return json.loads(json_string)
     except json.JSONDecodeError:
         return []
+
+
+from app import routes, models
