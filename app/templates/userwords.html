@@ -4,12 +4,16 @@
         function goToReviewPer() {
             const searchInput = document.querySelector('input[name="search"]');
             const reviewPeriodSelect = document.querySelector('select[name="review_period"]');
+            const hskSelect = document.querySelector('select[name="hsk_levels"]');
             const sortBy = '{{ request.args.get("sort_by", "next_review_date") }}';
             const sortOrder = '{{ request.args.get("sort_order", "asc") }}';
 
             const url = new URL('{{ url_for("review_per") }}', window.location.origin);
             url.searchParams.append('period', reviewPeriodSelect.value);
             url.searchParams.append('search', searchInput.value);
+            // Append selected HSK levels
+            const selectedHskLevels = Array.from(hskSelect.selectedOptions).map(option => option.value);
+            url.searchParams.append('hsk_levels', JSON.stringify(selectedHskLevels));
             url.searchParams.append('sort_by', sortBy);
             url.searchParams.append('sort_order', sortOrder);
 
@@ -46,14 +50,38 @@
                                 {% if not request.args.get('review_period') or request.args.get('review_period') == 'zero' %}selected{% endif %}>
                             Сейчас
                         </option>
-                        <option value="three_days" {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три дня</option>
+                        <option value="three_days"
+                                {% if request.args.get('review_period') == 'three_days' %}selected{% endif %}>Через три
+                            дня
+                        </option>
                         <option value="week" {% if request.args.get('review_period') == 'week' %}selected{% endif %}>
                             Через неделю
                         </option>
-                        {#                    <option value="month_ago" {% if request.args.get('review_period') == 'month_ago' %}selected{% endif %}>За месяц (прошлый)</option>#}
-                        {#                        <option value="last_year"#}
-                        {#                                {% if request.args.get('review_period') == 'last_year' %}selected{% endif %}>Через год#}
-                        {#                        </option>#}
+                    </select>
+                </div>
+                <div class="input-group-append" style="margin-right: 0.5rem">
+                    <select class="form-control" name="hsk_levels" multiple>
+                        <option value="0"
+                                {% if '0' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 0
+                        </option>
+                        <option value="1"
+                                {% if '1' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 1
+                        </option>
+                        <option value="2"
+                                {% if '2' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 2
+                        </option>
+                        <option value="3"
+                                {% if '3' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 3
+                        </option>
+                        <option value="4"
+                                {% if '4' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 4
+                        </option>
+                        <option value="5"
+                                {% if '5' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 5
+                        </option>
+                        <option value="6"
+                                {% if '6' in request.args.get('hsk_levels', '[]')|from_json %}selected{% endif %}>HSK 6
+                        </option>
                     </select>
                 </div>
                 <div class="input-group-append">
